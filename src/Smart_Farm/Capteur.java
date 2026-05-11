@@ -54,6 +54,16 @@ abstract class Capteur  {
     public String getZoneId() { return zoneId; }
     public StatutCapteur getStatut() { return statut; }
     public void setZoneId(String zoneId) { this.zoneId = zoneId; }
+
+    @Override
+    public String toString() {
+        return "Capteur{" +
+                "id='" + id + '\'' +
+                ", zoneId='" + zoneId + '\'' +
+                ", statut=" + statut +
+                ", historiqueReleves=" + historiqueReleves +
+                '}';
+    }
 }
 
 // ==================== CAPTEUR NUMÉRIQUE (ABSTRACT) ====================

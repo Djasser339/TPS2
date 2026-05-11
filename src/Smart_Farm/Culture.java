@@ -67,6 +67,16 @@ abstract class Culture {
                 "Pluviométrie : " + pluviometrie + "\n" +
                 "Température : " + temperature + "\n";
     }
+
+    @Override
+    public String toString() {
+        return "Culture{" +
+                "famille=" + famille +
+                ", dateRecolte=" + dateRecolte +
+                ", datePlantation=" + datePlantation +
+                ", stadeCroissance=" + stadeCroissance +
+                '}';
+    }
 }
 
 class Cereal extends Culture {

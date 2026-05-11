@@ -151,6 +151,7 @@ public class Main {
                 case 1 -> {
                     Ruminant r = creerRuminant(sc);
 
+
                     System.out.print("Code zone : ");
                     Zone z = trouverZone(ferme, sc.nextInt());
 

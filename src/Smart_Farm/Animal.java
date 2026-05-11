@@ -49,6 +49,9 @@ abstract class Animal {
     public void setCapteurBio(CapteurBiometrique capteurBio) { this.capteurBio = capteurBio; }
     public void setCapteurGPS(CapteurGPS capteurGPS) { this.capteurGPS = capteurGPS; }
 
+    public void ajoutterEvenementSante(EvenementSante e) { evenementsSante.add(e); }
+    public void SuprimerEvenementSante(EvenementSante e) { evenementsSante.remove(e); }
+
     @Override
     public String toString() {
         return "Animal{id=" + id + ", nom='" + nom + "', espece=" + espece

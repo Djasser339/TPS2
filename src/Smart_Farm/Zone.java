@@ -8,13 +8,15 @@ import java.util.Collections;
 import java.util.List;
 
 abstract class Zone implements Suspendable {
-    private int code;
-    private String nom;
-    private TypeZone type;
-    private StatutZone statut;
-    private boolean estSuspendu;
-    private List<Capteur> capteurs = new ArrayList<>();
-    private List<EnregistrementProduction> productions = new ArrayList<>();
+    protected int code;
+    protected String nom;
+    protected TypeZone type;
+    protected StatutZone statut;
+    protected boolean estSuspendu;
+    protected List<Capteur> capteurs = new ArrayList<>();
+    protected List<EnregistrementProduction> productions = new ArrayList<>();
+    protected List<Alerte>  alerts = new ArrayList<>();
+    protected List<Releve> relevances = new ArrayList<>();
 
     public Zone(int code, String nom, TypeZone type) {
         this.code = code;
@@ -47,6 +49,12 @@ abstract class Zone implements Suspendable {
     public void ajouterCapteur(Capteur c) { capteurs.add(c); }
     public void supprimerCapteur(Capteur c) { capteurs.remove(c); }
 
+    public void ajouterAlerte(Alerte a) { alerts.add(a); }
+    public void supprimerAlerte(Alerte a) { alerts.remove(a); }
+
+    public void ajouterReleve(Releve r) { relevances.add(r); }
+    public void supprimerReleve(Releve r) { relevances.remove(r); }
+
     public void enregistrerProduction(double quantite, String typeProduction) {
         productions.add(new EnregistrementProduction(quantite, typeProduction));
     }
@@ -57,10 +65,21 @@ abstract class Zone implements Suspendable {
     public StatutZone getStatut() { return statut; }
     public List<Capteur> getCapteurs() { return Collections.unmodifiableList(capteurs); }
     public List<EnregistrementProduction> getProductions() { return Collections.unmodifiableList(productions); }
+    public List<Alerte> getAlerts() { return Collections.unmodifiableList(alerts); }
     public int getNbrEntite() { return 0; }
 
     public void setNom(String nom) { this.nom = nom; }
     public void setStatut(StatutZone statut) { this.statut = statut; }
+
+    @Override
+    public String toString() {
+        return "Zone{" +
+                "code=" + code +
+                ", nom='" + nom + '\'' +
+                ", type=" + type +
+                ", statut=" + statut +
+                '}';
+    }
 }
 
 
@@ -68,6 +87,9 @@ abstract class Zone implements Suspendable {
 
 class ZoneCulture extends Zone {
     private List<Culture> cultures = new ArrayList<>();
+    private List<CapteurSol> capteurSols = new ArrayList<>();
+    private List<CapteurEnvironnemental> capteurEnvironnementals = new ArrayList<>();
+
 
     public ZoneCulture(int code, String nom, TypeZone type) {
         super(code, nom, type);
@@ -76,6 +98,28 @@ class ZoneCulture extends Zone {
     public void ajouterCulture(Culture c) { cultures.add(c); }
     public void supprimerCulture(Culture c) { cultures.remove(c); }
     public List<Culture> getCultures() { return Collections.unmodifiableList(cultures); }
+
+    public void ajoutterCapteurSol(CapteurSol c) {
+        capteurSols.add(c);
+        capteurs.add(c);
+    }
+
+    public void ajoutterCapteurEnvironnementals(CapteurEnvironnemental c) {
+        capteurEnvironnementals.add(c);
+        capteurs.add(c);
+    }
+
+    public void SuprimerCapteurSol(CapteurSol c) {
+        capteurSols.remove(c);
+        capteurSols.remove(c);
+    }
+
+    public void SuprimerCapteurEnvironnementals(CapteurEnvironnemental c) {
+        capteurEnvironnementals.remove(c);
+        capteurs.remove(c);
+    }
+
+
 
     @Override
     public int getNbrEntite() { return cultures.size(); }
@@ -93,7 +137,9 @@ class ZoneElevage extends Zone {
         this.limitZone = limitZone;
     }
 
-    public void ajouterAnimal(Animal a) { animals.add(a); }
+    public void ajouterRuminant(Ruminant a) { animals.add(a); }
+    public void ajouterVollaile(Volaille a) { animals.add(a); }
+
     public void supprimerAnimal(Animal a) { animals.remove(a); }
     public void ajouterProgAlimentation(ProgAlimentation p) { programme.add(p); }
 
@@ -109,6 +155,7 @@ class ZoneElevage extends Zone {
 class ZoneAquacole extends Zone {
     private List<Aquacole> aquacoles = new ArrayList<>();
     private List<ProgAlimentation> programme = new ArrayList<>();
+    private List<CapteurEau> capteurEau = new ArrayList<>();
 
     public ZoneAquacole(int code, String nom, TypeZone type) {
         super(code, nom, type);
@@ -118,8 +165,20 @@ class ZoneAquacole extends Zone {
     public void supprimerAquacole(Aquacole a) { aquacoles.remove(a); }
     public void ajouterProgAlimentation(ProgAlimentation p) { programme.add(p); }
 
+    public void ajoutterCapteurEau(CapteurEau c) {
+        capteurEau.add(c);
+        capteurs.add(c);
+    }
+    public void SuprimerCapteurEau(CapteurEau c) {
+        capteurEau.remove(c);
+        capteurs.remove(c);
+    }
+
+
+
     public List<Aquacole> getAquacoles() { return Collections.unmodifiableList(aquacoles); }
     public List<ProgAlimentation> getProgramme() { return Collections.unmodifiableList(programme); }
+
 
     @Override
     public int getNbrEntite() { return aquacoles.size(); }

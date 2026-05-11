@@ -14,6 +14,7 @@ class Ferme {
     private List<Zone> zones = new ArrayList<>();
     private List<Alerte> alertes = new ArrayList<>();
     private List<Culture> cultures = new ArrayList<>();
+    private List<Animal>  animals = new ArrayList<>();
 
     public Ferme(String nom) {
         this.nom = nom;
@@ -29,6 +30,10 @@ class Ferme {
         return Collections.unmodifiableList(alertes);
     }
 
+    public List<Animal> getAnimals() {
+        return animals;
+    }
+
     public void ajouterZoneElevage(ZoneElevage zone) { zones.add(zone); }
     public void ajouterZoneCulture(ZoneCulture zone) { zones.add(zone); }
     public void ajouterZoneAquacole(ZoneAquacole zone) { zones.add(zone); }
@@ -36,6 +41,9 @@ class Ferme {
 
     public void ajouterAlerte(Alerte a) { alertes.add(a); }
     public void ajouterCulture(Culture c) { cultures.add(c); }
+
+    public void ajouterAnimal(Animal a) { animals.add(a); }
+
 
     public void afficherPanneauAlertes() {
         System.out.println("========== PANNEAU DES ALERTES ==========");
@@ -82,13 +90,13 @@ class App {
 
     public void ajouterRuminant(Ruminant ruminant, ZoneElevage zone) {
         if (zone.getTypeZoneElevage() == TypeZoneElevage.Ruminant) {
-            zone.ajouterAnimal(ruminant);
+            zone.ajouterRuminant(ruminant);
         }
     }
 
     public void ajouterVolaille(Volaille volaille, ZoneElevage zone) {
         if (zone.getTypeZoneElevage() == TypeZoneElevage.Volaille) {
-            zone.ajouterAnimal(volaille);
+            zone.ajouterVollaile(volaille);
         }
     }
 
@@ -124,7 +132,7 @@ class App {
     // =============== AFFICHAGE REFACTORISE ===================
     // =========================================================
 
-    private String afficherInfosBaseZone(Zone z) {
+    public String afficherInfosBaseZone(Zone z) {
         StringBuilder r = new StringBuilder();
 
         r.append("Code : ").append(z.getCode()).append("\n");
@@ -137,7 +145,7 @@ class App {
         return r.toString();
     }
 
-    private String afficherCapteursZone(Zone z) {
+    public String afficherCapteursZone(Zone z) {
         StringBuilder r = new StringBuilder();
 
         r.append("--- Capteurs ---\n");
@@ -151,7 +159,7 @@ class App {
         return r.toString();
     }
 
-    private String afficherProductionsZone(Zone z) {
+    public String afficherProductionsZone(Zone z) {
         StringBuilder r = new StringBuilder();
 
         r.append("--- Productions ---\n");
@@ -162,7 +170,7 @@ class App {
         return r.toString();
     }
 
-    private String afficherZoneCulture(ZoneCulture z) {
+    public String afficherZoneCulture(ZoneCulture z) {
         StringBuilder r = new StringBuilder();
 
         r.append("--- Cultures ---\n");
@@ -175,7 +183,7 @@ class App {
         return r.toString();
     }
 
-    private String afficherZoneElevage(ZoneElevage z) {
+    public String afficherZoneElevage(ZoneElevage z) {
         StringBuilder r = new StringBuilder();
 
         r.append("--- Animaux ---\n");
@@ -186,7 +194,7 @@ class App {
         return r.toString();
     }
 
-    private String afficherZoneAquacole(ZoneAquacole z) {
+    public String afficherZoneAquacole(ZoneAquacole z) {
         StringBuilder r = new StringBuilder();
 
         r.append("--- Aquacoles ---\n");
@@ -197,7 +205,7 @@ class App {
         return r.toString();
     }
 
-    private String afficherZoneComplete(Zone z) {
+    public String afficherZoneComplete(Zone z) {
         StringBuilder r = new StringBuilder();
 
         r.append(afficherInfosBaseZone(z));
