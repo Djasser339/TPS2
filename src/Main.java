@@ -1,6 +1,5 @@
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 // ==================== ÉNUMÉRATIONS ====================
 
@@ -43,7 +42,7 @@ class Seuil {
     public double getMax() { return max; }
 }
 
-// RELEVE
+// ==================== RELEVE ====================
 abstract class Releve {
     private static long compteur = 0;
     private final long id;
@@ -83,7 +82,6 @@ class ReleveNumerique extends Releve {
     public String getUnite() { return unite; }
     public TypeMesure getTypeMesure() { return typeMesure; }
 
-
     public String getValeurAsString() {
         return valeur + " " + unite;
     }
@@ -101,7 +99,6 @@ class ReleveGPS extends Releve {
 
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
-
 
     public String getValeurAsString() {
         return String.format("lat=%.4f, lon=%.4f", latitude, longitude);
@@ -138,8 +135,15 @@ class Alerte {
     public boolean isSupprimee() { return supprimee; }
 }
 
+// ==================== INTERFACE SUSPENDABLE ====================
+interface Suspendable {
+    void suspendre();
+    void reactiver();
+    boolean estSuspendu();
+}
+
 // ==================== CAPTEUR (ABSTRACT) ====================
-abstract class Capteur {
+abstract class Capteur implements Suspendable {
     protected final String id;
     protected String zoneId;
     protected StatutCapteur statut;
@@ -158,8 +162,20 @@ abstract class Capteur {
         this.statut = nouveauStatut;
     }
 
-    public void suspendre() { this.statut = StatutCapteur.SUSPENDU; }
-    public void reactiver() { this.statut = StatutCapteur.ACTIVE; }
+
+    public void suspendre() {
+        this.statut = StatutCapteur.SUSPENDU;
+    }
+
+
+    public void reactiver() {
+        this.statut = StatutCapteur.ACTIVE;
+    }
+
+
+    public boolean estSuspendu() {
+        return this.statut == StatutCapteur.SUSPENDU;
+    }
 
     public void ajouterReleve(Releve releve) {
         historiqueReleves.add(releve);
@@ -169,10 +185,15 @@ abstract class Capteur {
         return Collections.unmodifiableList(historiqueReleves);
     }
 
+
     public List<Releve> filtrerRelevesParDate(LocalDateTime debut, LocalDateTime fin) {
-        return historiqueReleves.stream()
-                .filter(r -> !r.getTimestamp().isBefore(debut) && !r.getTimestamp().isAfter(fin))
-                .collect(Collectors.toList());
+        List<Releve> resultat = new ArrayList<>();
+        for (Releve r : historiqueReleves) {
+            if (!r.getTimestamp().isBefore(debut) && !r.getTimestamp().isAfter(fin)) {
+                resultat.add(r);
+            }
+        }
+        return resultat;
     }
 
     public String getId() { return id; }
@@ -221,8 +242,11 @@ class CapteurEnvironnemental extends CapteurNumerique {
             throw new IllegalArgumentException("Type non valide pour capteur environnemental");
     }
 
-    @Override
+
     public void envoyerReleve() {
+        if (this.statut != StatutCapteur.ACTIVE) {
+            return;
+        }
         Random rand = new Random();
         double valeur;
         switch (typeMesure) {
@@ -243,8 +267,11 @@ class CapteurSol extends CapteurNumerique {
             throw new IllegalArgumentException("Type non valide pour capteur de sol");
     }
 
-    @Override
+
     public void envoyerReleve() {
+        if (this.statut != StatutCapteur.ACTIVE) {
+            return;
+        }
         Random rand = new Random();
         double valeur;
         switch (typeMesure) {
@@ -265,8 +292,11 @@ class CapteurEau extends CapteurNumerique {
             throw new IllegalArgumentException("Type non valide pour capteur aquacole");
     }
 
-    @Override
+
     public void envoyerReleve() {
+        if (this.statut != StatutCapteur.ACTIVE) {
+            return;
+        }
         Random rand = new Random();
         double valeur;
         switch (typeMesure) {
@@ -293,8 +323,11 @@ class CapteurBiometrique extends Capteur {
         this.seuilActivite = seuilActivite;
     }
 
-    @Override
+
     public void envoyerReleve() {
+        if (this.statut != StatutCapteur.ACTIVE) {
+            return;
+        }
         Random rand = new Random();
         double temperature = 37 + rand.nextDouble() * 3;
         double activite = 20 + rand.nextDouble() * 100;
@@ -324,8 +357,11 @@ class CapteurGPS extends Capteur {
         super(id, zoneId);
     }
 
-    @Override
+
     public void envoyerReleve() {
+        if (this.statut != StatutCapteur.ACTIVE) {
+            return;
+        }
         Random rand = new Random();
         this.latitude = 43.5 + (rand.nextDouble() - 0.5) * 0.1;
         this.longitude = 1.5 + (rand.nextDouble() - 0.5) * 0.1;
