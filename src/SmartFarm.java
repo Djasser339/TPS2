@@ -382,7 +382,7 @@ class GestionnaireCapteursAlertes {
 // ==================== CAPTEUR (ABSTRAIT) ====================
 // =============================================================
 
-abstract class Capteur {
+abstract class Capteur implements Suspendable {
     protected final String        id;
     protected String              zoneId;
     protected StatutCapteur       statut;
