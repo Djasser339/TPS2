@@ -1,30 +1,19 @@
 package Smart_Farm;
 
 // ==================== SEUIL ====================
-
 class Seuil {
-    private double min;
-    private double max;
-
+    private double min, max;
     public Seuil(double min, double max) {
         if (min >= max) throw new IllegalArgumentException("min doit être < max");
-        this.min = min;
-        this.max = max;
+        this.min = min; this.max = max;
     }
-
-    public boolean estHorsLimites(double valeur) {
-        return valeur < min || valeur > max;
-    }
-
+    public boolean estHorsLimites(double v) { return v < min || v > max; }
     public Gravite evaluerGravite(double valeur) {
         double tolerance = (max - min) * 0.1;
-        if (valeur < min - tolerance || valeur > max + tolerance)
-            return Gravite.critique;
-        if (valeur < min || valeur > max)
-            return Gravite.avertissement;
+        if (valeur < min - tolerance || valeur > max + tolerance) return Gravite.critique;
+        if (valeur < min || valeur > max) return Gravite.avertissement;
         return Gravite.normal;
     }
-
     public double getMin() { return min; }
     public double getMax() { return max; }
 }
