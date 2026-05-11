@@ -64,6 +64,8 @@ abstract class Capteur  {
                 ", historiqueReleves=" + historiqueReleves +
                 '}';
     }
+
+
 }
 
 // ==================== CAPTEUR NUMÉRIQUE (ABSTRACT) ====================

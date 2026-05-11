@@ -66,7 +66,20 @@ abstract class Zone implements Suspendable {
     public List<Capteur> getCapteurs() { return Collections.unmodifiableList(capteurs); }
     public List<EnregistrementProduction> getProductions() { return Collections.unmodifiableList(productions); }
     public List<Alerte> getAlerts() { return Collections.unmodifiableList(alerts); }
+    public List<Releve> getRelevances() { return Collections.unmodifiableList(relevances); }
     public int getNbrEntite() { return 0; }
+
+    public String afficherProduction() {
+        StringBuilder res = new StringBuilder();
+
+        for (EnregistrementProduction e : productions) {
+            res.append(e.toString());
+        }
+
+        return res.toString();
+    }
+
+
 
     public void setNom(String nom) { this.nom = nom; }
     public void setStatut(StatutZone statut) { this.statut = statut; }
@@ -150,6 +163,16 @@ class ZoneElevage extends Zone {
 
     @Override
     public int getNbrEntite() { return animals.size(); }
+
+    public String afficherProgAlimentation(){
+        StringBuilder res = new StringBuilder();
+
+        for (ProgAlimentation a : programme){
+            res.append(a.toString());
+        }
+
+        return res.toString();
+    }
 }
 
 class ZoneAquacole extends Zone {
@@ -179,6 +202,14 @@ class ZoneAquacole extends Zone {
     public List<Aquacole> getAquacoles() { return Collections.unmodifiableList(aquacoles); }
     public List<ProgAlimentation> getProgramme() { return Collections.unmodifiableList(programme); }
 
+    public String afficherProgAlimentation(){
+        StringBuilder res = new StringBuilder();
+        for (Aquacole a : aquacoles){
+            res.append(a.toString());
+        }
+
+        return res.toString();
+    }
 
     @Override
     public int getNbrEntite() { return aquacoles.size(); }

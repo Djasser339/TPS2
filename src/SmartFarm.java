@@ -1659,7 +1659,11 @@ public class SmartFarm {
         try { return Double.parseDouble(scanner.nextLine().trim()); }
         catch (Exception e) { return 0; }
     }
+
+
 }
+
+
 
 
 
