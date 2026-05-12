@@ -1,16 +1,11 @@
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
-// ========== ÉNUMÉRATIONS ==========
-enum EtatSante { malade, sain, quarentaine }
+// ==================== ÉNUMÉRATIONS ====================
 enum Gravite { normal, avertissement, critique }
-enum TypeZone { aquacole, elevage, culture }
-enum StatutZone { ACTIVE, INACTIVE }
-enum TypeEspece { ruminant, volaille, aqua }
-enum StadeCroissance { semis, germination, croissance, maturite, recolte }
-enum FamilleCulture { Cereal, Legume, Fruit }
 enum StatutCapteur { ACTIVE, INACTIVE, SUSPENDU }
-enum TypeZoneElevage { Ruminant, Volaille }
 enum TypeMesure {
     TEMPERATURE, HUMIDITE, PLUVIOMETRIE,
     PH_SOL, HUMIDITE_SOL, AZOTE,
@@ -18,25 +13,14 @@ enum TypeMesure {
     TEMPERATURE_CORPORELLE, ACTIVITE_PAS_PAR_MINUTE
 }
 
-// ========== INTERFACES ==========
-interface Suspendable {
-    void suspendre();
-    void reactiver();
-    boolean estSuspendu();
-    void desactiver();
-}
-interface Entite {
-    void AjoutterAnimal(String a);
-}
-
-// ========== CLASSES DE BASE (SEUIL, RELEVE, ALERTE, GESTIONNAIRE) ==========
+// ==================== SEUIL ====================
 class Seuil {
     private double min, max;
     public Seuil(double min, double max) {
-        if (min >= max) throw new IllegalArgumentException("min < max");
+        if (min >= max) throw new IllegalArgumentException("min doit être < max");
         this.min = min; this.max = max;
     }
-    public boolean estHorsLimites(double valeur) { return valeur < min || valeur > max; }
+    public boolean estHorsLimites(double v) { return v < min || v > max; }
     public Gravite evaluerGravite(double valeur) {
         double tolerance = (max - min) * 0.1;
         if (valeur < min - tolerance || valeur > max + tolerance) return Gravite.critique;
@@ -47,6 +31,7 @@ class Seuil {
     public double getMax() { return max; }
 }
 
+// ==================== RELEVES ====================
 abstract class Releve {
     private static long compteur = 0;
     private final long id;
@@ -54,16 +39,14 @@ abstract class Releve {
     private final LocalDateTime timestamp;
     private Gravite niveau;
     public Releve(String idCapteur) {
-        this.id = ++compteur;
-        this.idCapteur = idCapteur;
-        this.timestamp = LocalDateTime.now();
-        this.niveau = Gravite.normal;
+        this.id = ++compteur; this.idCapteur = idCapteur;
+        this.timestamp = LocalDateTime.now(); this.niveau = Gravite.normal;
     }
-    public long getId() { return id; }
-    public String getIdCapteur() { return idCapteur; }
+    public long getId()                 { return id; }
+    public String getIdCapteur()        { return idCapteur; }
     public LocalDateTime getTimestamp() { return timestamp; }
-    public Gravite getNiveau() { return niveau; }
-    public void setNiveau(Gravite niveau) { this.niveau = niveau; }
+    public Gravite getNiveau()          { return niveau; }
+    public void setNiveau(Gravite n)    { this.niveau = n; }
     public abstract String getValeurAsString();
 }
 
@@ -72,13 +55,10 @@ class ReleveNumerique extends Releve {
     private final String unite;
     private final TypeMesure typeMesure;
     public ReleveNumerique(String idCapteur, double valeur, String unite, TypeMesure typeMesure) {
-        super(idCapteur);
-        this.valeur = valeur;
-        this.unite = unite;
-        this.typeMesure = typeMesure;
+        super(idCapteur); this.valeur = valeur; this.unite = unite; this.typeMesure = typeMesure;
     }
-    public double getValeur() { return valeur; }
-    public String getUnite() { return unite; }
+    public double getValeur()         { return valeur; }
+    public String getUnite()          { return unite; }
     public TypeMesure getTypeMesure() { return typeMesure; }
     public String getValeurAsString() { return valeur + " " + unite; }
 }
@@ -86,15 +66,14 @@ class ReleveNumerique extends Releve {
 class ReleveGPS extends Releve {
     private final double latitude, longitude;
     public ReleveGPS(String idCapteur, double latitude, double longitude) {
-        super(idCapteur);
-        this.latitude = latitude;
-        this.longitude = longitude;
+        super(idCapteur); this.latitude = latitude; this.longitude = longitude;
     }
-    public double getLatitude() { return latitude; }
-    public double getLongitude() { return longitude; }
+    public double getLatitude()       { return latitude; }
+    public double getLongitude()      { return longitude; }
     public String getValeurAsString() { return String.format("lat=%.4f, lon=%.4f", latitude, longitude); }
 }
 
+// ==================== ALERTE ====================
 class Alerte {
     private static long compteur = 0;
     private final long id;
@@ -102,67 +81,75 @@ class Alerte {
     private final Gravite niveau;
     private final LocalDateTime dateCreation;
     private boolean acquittee, supprimee;
-    private String zoneId;
-    public Alerte(Releve releve, Gravite niveau, String zoneId) {
-        this.id = ++compteur;
-        this.releve = releve;
-        this.niveau = niveau;
-        this.dateCreation = LocalDateTime.now();
-        this.zoneId = zoneId;
-        this.acquittee = false;
-        this.supprimee = false;
+    public Alerte(Releve releve, Gravite niveau) {
+        this.id = ++compteur; this.releve = releve; this.niveau = niveau;
+        this.dateCreation = LocalDateTime.now(); this.acquittee = false; this.supprimee = false;
     }
-    public void acquitter() { this.acquittee = true; }
-    public void supprimer() { this.supprimee = true; }
-    public long getId() { return id; }
-    public Releve getReleve() { return releve; }
-    public Gravite getNiveau() { return niveau; }
+    public void acquitter()              { this.acquittee = true; }
+    public void supprimer()              { this.supprimee = true; }
+    public long getId()                  { return id; }
+    public Releve getReleve()            { return releve; }
+    public Gravite getNiveau()           { return niveau; }
     public LocalDateTime getDateCreation() { return dateCreation; }
-    public boolean isAcquittee() { return acquittee; }
-    public boolean isSupprimee() { return supprimee; }
-    public String getZoneId() { return zoneId; }
+    public boolean isAcquittee()         { return acquittee; }
+    public boolean isSupprimee()         { return supprimee; }
 }
 
+// ==================== GESTIONNAIRE GLOBAL ====================
 class GestionnaireCapteursAlertes {
     private static GestionnaireCapteursAlertes instance;
-    private List<Capteur> tousLesCapteurs = new ArrayList<>();
+    private List<Capteur>              tousLesCapteurs = new ArrayList<>();
     private Map<String, List<Capteur>> capteursParZone = new HashMap<>();
-    private Map<String, Capteur> capteursParId = new HashMap<>();
-    private List<Alerte> alertes = new ArrayList<>();
+    private Map<String, Capteur>       capteursParId   = new HashMap<>();
+    private List<Alerte>               alertes         = new ArrayList<>();
 
     private GestionnaireCapteursAlertes() {}
     public static GestionnaireCapteursAlertes getInstance() {
         if (instance == null) instance = new GestionnaireCapteursAlertes();
         return instance;
     }
-    public void ajouterCapteur(Capteur capteur) {
-        tousLesCapteurs.add(capteur);
-        capteursParZone.computeIfAbsent(capteur.getZoneId(), k -> new ArrayList<>()).add(capteur);
-        capteursParId.put(capteur.getId(), capteur);
+
+    public void ajouterCapteur(Capteur c) {
+        tousLesCapteurs.add(c);
+        capteursParZone.computeIfAbsent(c.getZoneId(), k -> new ArrayList<>()).add(c);
+        capteursParId.put(c.getId(), c);
     }
-    public void declencherAlerte(Releve releve, Gravite niveau, String zoneId) {
-        if (niveau != Gravite.normal) alertes.add(new Alerte(releve, niveau, zoneId));
+
+    // MÉTHODE AJOUTÉE — accès par ID
+    public Capteur getCapteurById(String id) { return capteursParId.get(id); }
+
+    // MÉTHODE AJOUTÉE — liste complète
+    public List<Capteur> getTousCapteurs() { return Collections.unmodifiableList(tousLesCapteurs); }
+
+    // MÉTHODE AJOUTÉE — liaison avec la Zone du binôme
+    public void suspendreZone(String zoneId) {
+        for (Capteur c : capteursParZone.getOrDefault(zoneId, Collections.emptyList())) c.suspendre();
+    }
+    public void reactiverZone(String zoneId) {
+        for (Capteur c : capteursParZone.getOrDefault(zoneId, Collections.emptyList())) c.reactiver();
+    }
+
+    public void declencherAlerte(Releve releve, Gravite niveau) {
+        if (niveau != Gravite.normal) alertes.add(new Alerte(releve, niveau));
     }
     public List<Capteur> getCapteursParZone(String zoneId) {
         return capteursParZone.getOrDefault(zoneId, Collections.emptyList());
     }
+
     public String afficherTableauBordZone(String zoneId) {
         List<Capteur> capteurs = getCapteursParZone(zoneId);
         if (capteurs.isEmpty()) return "Aucun capteur dans la zone " + zoneId;
         StringBuilder sb = new StringBuilder("\n--- TABLEAU DE BORD - ZONE " + zoneId + " ---\n");
         for (Capteur c : capteurs) {
-            List<Releve> historique = c.getHistoriqueReleves();
-            if (historique.isEmpty()) {
-                sb.append("Capteur ").append(c.getId()).append(" : pas de relevé\n");
-                continue;
-            }
-            Releve dernier = historique.get(historique.size()-1);
+            List<Releve> hist = c.getHistoriqueReleves();
+            if (hist.isEmpty()) { sb.append("Capteur ").append(c.getId()).append(" : pas de relevé\n"); continue; }
+            Releve dernier = hist.get(hist.size() - 1);
             String niveauStr, couleur;
             switch (dernier.getNiveau()) {
-                case normal: niveauStr="NORMAL"; couleur="\u001B[32m"; break;
-                case avertissement: niveauStr="AVERTISSEMENT"; couleur="\u001B[33m"; break;
-                case critique: niveauStr="CRITIQUE"; couleur="\u001B[31m"; break;
-                default: niveauStr="INCONNU"; couleur="";
+                case normal:        niveauStr = "NORMAL";        couleur = "\u001B[32m"; break;
+                case avertissement: niveauStr = "AVERTISSEMENT"; couleur = "\u001B[33m"; break;
+                case critique:      niveauStr = "CRITIQUE";      couleur = "\u001B[31m"; break;
+                default:            niveauStr = "INCONNU";       couleur = "";
             }
             sb.append("Capteur ").append(c.getId()).append(" (").append(c.getTypeNom()).append(") : ")
                     .append(couleur).append(niveauStr).append("\u001B[0m")
@@ -170,38 +157,42 @@ class GestionnaireCapteursAlertes {
         }
         return sb.toString();
     }
+
     public String afficherEvolutionReleves(String idCapteur) {
         Capteur capteur = capteursParId.get(idCapteur);
         if (capteur == null) return "Capteur inconnu : " + idCapteur;
-        List<Releve> historique = capteur.getHistoriqueReleves();
-        if (historique.isEmpty()) return "Aucun relevé pour ce capteur.";
-        StringBuilder sb = new StringBuilder("\n=== ÉVOLUTION DES RELEVÉS - CAPTEUR " + idCapteur + " ===\n");
-        sb.append(String.format("%-20s %-15s %-10s\n", "Date", "Valeur", "Niveau"));
-        sb.append("------------------------------------------------\n");
-        for (Releve r : historique)
-            sb.append(String.format("%-20s %-15s %-10s\n", r.getTimestamp().toString(), r.getValeurAsString(), r.getNiveau().toString()));
+        List<Releve> hist = capteur.getHistoriqueReleves();
+        if (hist.isEmpty()) return "Aucun relevé pour ce capteur.";
+        StringBuilder sb = new StringBuilder("\n=== ÉVOLUTION – CAPTEUR " + idCapteur + " ===\n");
+        sb.append(String.format("%-25s %-18s %-12s%n", "Date", "Valeur", "Niveau"));
+        sb.append("─".repeat(56)).append("\n");
+        for (Releve r : hist)
+            sb.append(String.format("%-25s %-18s %-12s%n", r.getTimestamp(), r.getValeurAsString(), r.getNiveau()));
         return sb.toString();
     }
+
     public String afficherEvolutionRelevesZone(String zoneId) {
         List<Capteur> capteurs = getCapteursParZone(zoneId);
         if (capteurs.isEmpty()) return "Aucun capteur dans la zone " + zoneId;
-        StringBuilder sb = new StringBuilder("\n=== ÉVOLUTION DES RELEVÉS - ZONE " + zoneId + " ===\n");
+        StringBuilder sb = new StringBuilder("\n=== ÉVOLUTION – ZONE " + zoneId + " ===\n");
         for (Capteur c : capteurs) sb.append(afficherEvolutionReleves(c.getId())).append("\n");
         return sb.toString();
     }
+
     public String afficherAlertesActives() {
         List<Alerte> actives = new ArrayList<>();
         for (Alerte a : alertes) if (!a.isAcquittee() && !a.isSupprimee()) actives.add(a);
-        Collections.sort(actives, (a1,a2) -> a2.getNiveau().compareTo(a1.getNiveau()));
+        actives.sort((a1, a2) -> a2.getNiveau().compareTo(a1.getNiveau()));
         if (actives.isEmpty()) return "Aucune alerte active.";
         StringBuilder sb = new StringBuilder("\n=== ALERTES ACTIVES ===\n");
         for (Alerte a : actives)
-            sb.append("ID:").append(a.getId()).append(" | Niveau:").append(a.getNiveau())
-                    .append(" | Capteur:").append(a.getReleve().getIdCapteur())
-                    .append(" | Date:").append(a.getDateCreation())
-                    .append(" | Valeur:").append(a.getReleve().getValeurAsString()).append("\n");
+            sb.append("ID: ").append(a.getId()).append(" | Niveau: ").append(a.getNiveau())
+                    .append(" | Capteur: ").append(a.getReleve().getIdCapteur())
+                    .append(" | Date: ").append(a.getDateCreation())
+                    .append(" | Valeur: ").append(a.getReleve().getValeurAsString()).append("\n");
         return sb.toString();
     }
+
     public boolean acquitterAlerte(long id) {
         for (Alerte a : alertes) if (a.getId() == id && !a.isSupprimee()) { a.acquitter(); return true; }
         return false;
@@ -210,101 +201,104 @@ class GestionnaireCapteursAlertes {
         for (Alerte a : alertes) if (a.getId() == id) { a.supprimer(); return true; }
         return false;
     }
-    public List<Alerte> filtrerAlertes(String zoneId, TypeMesure typeCapteur, Gravite niveau,
-                                       LocalDateTime debut, LocalDateTime fin) {
-        List<Alerte> resultat = new ArrayList<>();
+
+    public List<Alerte> filtrerAlertes(String zoneId, TypeMesure typeCapteur,
+                                       Gravite niveau, LocalDateTime debut, LocalDateTime fin) {
+        List<Alerte> res = new ArrayList<>();
         for (Alerte a : alertes) {
-            if (zoneId != null && !zoneId.equals(a.getZoneId())) continue;
-            if (niveau != null && a.getNiveau() != niveau) continue;
-            if (debut != null && a.getDateCreation().isBefore(debut)) continue;
-            if (fin != null && a.getDateCreation().isAfter(fin)) continue;
+            Capteur c = capteursParId.get(a.getReleve().getIdCapteur());
+            if (c == null) continue;
+            if (zoneId      != null && !c.getZoneId().equals(zoneId)) continue;
             if (typeCapteur != null) {
                 Releve r = a.getReleve();
                 if (!(r instanceof ReleveNumerique)) continue;
                 if (((ReleveNumerique) r).getTypeMesure() != typeCapteur) continue;
             }
-            resultat.add(a);
+            if (niveau != null && a.getNiveau() != niveau) continue;
+            if (debut  != null && a.getDateCreation().isBefore(debut)) continue;
+            if (fin    != null && a.getDateCreation().isAfter(fin))    continue;
+            res.add(a);
         }
-        Collections.sort(resultat, (a1,a2) -> a2.getNiveau().compareTo(a1.getNiveau()));
-        return resultat;
+        res.sort((a1, a2) -> a2.getNiveau().compareTo(a1.getNiveau()));
+        return res;
     }
 }
 
-// ========== CAPTEURS ==========
+// ==================== INTERFACE SUSPENDABLE ====================
+interface Suspendable {
+    void suspendre();
+    void reactiver();
+    boolean estSuspendu();
+}
+
+// ==================== CAPTEUR (ABSTRACT) ====================
 abstract class Capteur implements Suspendable {
     protected final String id;
     protected String zoneId;
     protected StatutCapteur statut;
     protected List<Releve> historiqueReleves;
     protected GestionnaireCapteursAlertes gestionnaire = GestionnaireCapteursAlertes.getInstance();
+
     public Capteur(String id, String zoneId) {
-        this.id = id;
-        this.zoneId = zoneId;
-        this.statut = StatutCapteur.ACTIVE;
-        this.historiqueReleves = new ArrayList<>();
+        this.id = id; this.zoneId = zoneId;
+        this.statut = StatutCapteur.ACTIVE; this.historiqueReleves = new ArrayList<>();
     }
     public abstract void envoyerReleve();
-    public void changerStatut(StatutCapteur nouveauStatut) { this.statut = nouveauStatut; }
-    @Override public void suspendre() { this.statut = StatutCapteur.SUSPENDU; }
-    @Override public void reactiver() { this.statut = StatutCapteur.ACTIVE; }
-    @Override public boolean estSuspendu() { return this.statut == StatutCapteur.SUSPENDU; }
-    @Override public void desactiver() {
-        this.statut = StatutCapteur.INACTIVE;
-    }
-    public void ajouterReleve(Releve releve) { historiqueReleves.add(releve); }
+    public void changerStatut(StatutCapteur s) { this.statut = s; }
+    public void suspendre()   { this.statut = StatutCapteur.SUSPENDU; }
+    public void reactiver()   { this.statut = StatutCapteur.ACTIVE; }
+    public boolean estSuspendu() { return this.statut == StatutCapteur.SUSPENDU; }
+    public void ajouterReleve(Releve r) { historiqueReleves.add(r); }
     public List<Releve> getHistoriqueReleves() { return Collections.unmodifiableList(historiqueReleves); }
     public List<Releve> filtrerRelevesParDate(LocalDateTime debut, LocalDateTime fin) {
-        List<Releve> resultat = new ArrayList<>();
+        List<Releve> res = new ArrayList<>();
         for (Releve r : historiqueReleves)
-            if (!r.getTimestamp().isBefore(debut) && !r.getTimestamp().isAfter(fin))
-                resultat.add(r);
-        return resultat;
+            if (!r.getTimestamp().isBefore(debut) && !r.getTimestamp().isAfter(fin)) res.add(r);
+        return res;
     }
-    public String getId() { return id; }
-    public String getZoneId() { return zoneId; }
+    public String getId()            { return id; }
+    public String getZoneId()        { return zoneId; }
     public StatutCapteur getStatut() { return statut; }
-    public void setZoneId(String zoneId) { this.zoneId = zoneId; }
+    public void setZoneId(String z)  { this.zoneId = z; }
     public abstract String getTypeNom();
 }
 
+// ==================== CAPTEUR NUMERIQUE ====================
 abstract class CapteurNumerique extends Capteur {
     protected TypeMesure typeMesure;
     protected Seuil seuil;
     protected String unite;
-    public CapteurNumerique(String id, String zoneId, TypeMesure typeMesure, Seuil seuil, String unite) {
-        super(id, zoneId);
-        this.typeMesure = typeMesure;
-        this.seuil = seuil;
-        this.unite = unite;
+    public CapteurNumerique(String id, String zoneId, TypeMesure type, Seuil seuil, String unite) {
+        super(id, zoneId); this.typeMesure = type; this.seuil = seuil; this.unite = unite;
     }
-    public void configurerSeuil(Seuil nouveauSeuil) { this.seuil = nouveauSeuil; }
+    public void configurerSeuil(Seuil s) { this.seuil = s; }
     protected ReleveNumerique effectuerMesure(double valeur) {
-        ReleveNumerique releve = new ReleveNumerique(this.id, valeur, this.unite, this.typeMesure);
-        Gravite gravite = seuil.evaluerGravite(valeur);
-        releve.setNiveau(gravite);
-        this.ajouterReleve(releve);
-        if (gravite != Gravite.normal) gestionnaire.declencherAlerte(releve, gravite, this.zoneId);
-        return releve;
+        ReleveNumerique r = new ReleveNumerique(this.id, valeur, this.unite, this.typeMesure);
+        Gravite g = seuil.evaluerGravite(valeur);
+        r.setNiveau(g); this.ajouterReleve(r);
+        if (g != Gravite.normal) gestionnaire.declencherAlerte(r, g);
+        return r;
     }
     public TypeMesure getTypeMesure() { return typeMesure; }
-    public Seuil getSeuil() { return seuil; }
-    public String getUnite() { return unite; }
+    public Seuil getSeuil()           { return seuil; }
+    public String getUnite()          { return unite; }
 }
 
+// ==================== CAPTEURS CONCRETS ====================
 class CapteurEnvironnemental extends CapteurNumerique {
     public CapteurEnvironnemental(String id, String zoneId, TypeMesure type, Seuil seuil) {
-        super(id, zoneId, type, seuil, type == TypeMesure.TEMPERATURE ? "°C" : type == TypeMesure.HUMIDITE ? "%" : "mm");
+        super(id, zoneId, type, seuil,
+                type == TypeMesure.TEMPERATURE ? "°C" : type == TypeMesure.HUMIDITE ? "%" : "mm");
         if (type != TypeMesure.TEMPERATURE && type != TypeMesure.HUMIDITE && type != TypeMesure.PLUVIOMETRIE)
-            throw new IllegalArgumentException("Type non valide");
+            throw new IllegalArgumentException("Type non valide pour CapteurEnvironnemental");
     }
     @Override public void envoyerReleve() {
         if (statut != StatutCapteur.ACTIVE) return;
-        Random rand = new Random();
-        double v;
+        Random r = new Random(); double v;
         switch (typeMesure) {
-            case TEMPERATURE: v = 15 + rand.nextDouble() * 20; break;
-            case HUMIDITE: v = 40 + rand.nextDouble() * 60; break;
-            default: v = rand.nextDouble() * 50;
+            case TEMPERATURE: v = 15 + r.nextDouble() * 20; break;
+            case HUMIDITE:    v = 40 + r.nextDouble() * 60; break;
+            default:          v = r.nextDouble() * 50;
         }
         effectuerMesure(v);
     }
@@ -313,18 +307,18 @@ class CapteurEnvironnemental extends CapteurNumerique {
 
 class CapteurSol extends CapteurNumerique {
     public CapteurSol(String id, String zoneId, TypeMesure type, Seuil seuil) {
-        super(id, zoneId, type, seuil, type == TypeMesure.PH_SOL ? "pH" : type == TypeMesure.HUMIDITE_SOL ? "%" : "mg/kg");
+        super(id, zoneId, type, seuil,
+                type == TypeMesure.PH_SOL ? "pH" : type == TypeMesure.HUMIDITE_SOL ? "%" : "mg/kg");
         if (type != TypeMesure.PH_SOL && type != TypeMesure.HUMIDITE_SOL && type != TypeMesure.AZOTE)
-            throw new IllegalArgumentException("Type non valide");
+            throw new IllegalArgumentException("Type non valide pour CapteurSol");
     }
     @Override public void envoyerReleve() {
         if (statut != StatutCapteur.ACTIVE) return;
-        Random rand = new Random();
-        double v;
+        Random r = new Random(); double v;
         switch (typeMesure) {
-            case PH_SOL: v = 5.5 + rand.nextDouble() * 4; break;
-            case HUMIDITE_SOL: v = 10 + rand.nextDouble() * 70; break;
-            default: v = 20 + rand.nextDouble() * 180;
+            case PH_SOL:       v = 5.5 + r.nextDouble() * 4;  break;
+            case HUMIDITE_SOL: v = 10  + r.nextDouble() * 70; break;
+            default:           v = 20  + r.nextDouble() * 180;
         }
         effectuerMesure(v);
     }
@@ -333,18 +327,18 @@ class CapteurSol extends CapteurNumerique {
 
 class CapteurEau extends CapteurNumerique {
     public CapteurEau(String id, String zoneId, TypeMesure type, Seuil seuil) {
-        super(id, zoneId, type, seuil, type == TypeMesure.TEMPERATURE_EAU ? "°C" : type == TypeMesure.OXYGENE_DISSOUS ? "mg/L" : "pH");
+        super(id, zoneId, type, seuil,
+                type == TypeMesure.TEMPERATURE_EAU ? "°C" : type == TypeMesure.OXYGENE_DISSOUS ? "mg/L" : "pH");
         if (type != TypeMesure.TEMPERATURE_EAU && type != TypeMesure.OXYGENE_DISSOUS && type != TypeMesure.PH_EAU)
-            throw new IllegalArgumentException("Type non valide");
+            throw new IllegalArgumentException("Type non valide pour CapteurEau");
     }
     @Override public void envoyerReleve() {
         if (statut != StatutCapteur.ACTIVE) return;
-        Random rand = new Random();
-        double v;
+        Random r = new Random(); double v;
         switch (typeMesure) {
-            case TEMPERATURE_EAU: v = 10 + rand.nextDouble() * 15; break;
-            case OXYGENE_DISSOUS: v = 4 + rand.nextDouble() * 8; break;
-            default: v = 6.5 + rand.nextDouble() * 2;
+            case TEMPERATURE_EAU: v = 10  + r.nextDouble() * 15; break;
+            case OXYGENE_DISSOUS: v = 4   + r.nextDouble() * 8;  break;
+            default:              v = 6.5 + r.nextDouble() * 2;
         }
         effectuerMesure(v);
     }
@@ -353,31 +347,27 @@ class CapteurEau extends CapteurNumerique {
 
 class CapteurBiometrique extends Capteur {
     private Seuil seuilTemperature, seuilActivite;
-    public CapteurBiometrique(String id, String zoneId, Seuil seuilTemperature, Seuil seuilActivite) {
-        super(id, zoneId);
-        this.seuilTemperature = seuilTemperature;
-        this.seuilActivite = seuilActivite;
+    public CapteurBiometrique(String id, String zoneId, Seuil seuilTemp, Seuil seuilAct) {
+        super(id, zoneId); this.seuilTemperature = seuilTemp; this.seuilActivite = seuilAct;
     }
-    public void configurerSeuils(Seuil temp, Seuil act) { this.seuilTemperature = temp; this.seuilActivite = act; }
+    public void configurerSeuils(Seuil t, Seuil a) { seuilTemperature = t; seuilActivite = a; }
     @Override public void envoyerReleve() {
         if (statut != StatutCapteur.ACTIVE) return;
-        Random rand = new Random();
-        double temp = 37 + rand.nextDouble() * 3;
-        double act = 20 + rand.nextDouble() * 100;
-        ReleveNumerique rTemp = new ReleveNumerique(this.id, temp, "°C", TypeMesure.TEMPERATURE_CORPORELLE);
-        ReleveNumerique rAct = new ReleveNumerique(this.id, act, "pas/min", TypeMesure.ACTIVITE_PAS_PAR_MINUTE);
-        Gravite gTemp = seuilTemperature.evaluerGravite(temp);
-        Gravite gAct = seuilActivite.evaluerGravite(act);
-        rTemp.setNiveau(gTemp);
-        rAct.setNiveau(gAct);
-        this.ajouterReleve(rTemp);
-        this.ajouterReleve(rAct);
-        if (gTemp != Gravite.normal) gestionnaire.declencherAlerte(rTemp, gTemp, this.zoneId);
-        if (gAct != Gravite.normal) gestionnaire.declencherAlerte(rAct, gAct, this.zoneId);
+        Random r = new Random();
+        double temp = 37 + r.nextDouble() * 3;
+        double act  = 20 + r.nextDouble() * 100;
+        ReleveNumerique rT = new ReleveNumerique(id, temp, "°C",      TypeMesure.TEMPERATURE_CORPORELLE);
+        ReleveNumerique rA = new ReleveNumerique(id, act,  "pas/min", TypeMesure.ACTIVITE_PAS_PAR_MINUTE);
+        Gravite gT = seuilTemperature.evaluerGravite(temp);
+        Gravite gA = seuilActivite.evaluerGravite(act);
+        rT.setNiveau(gT); rA.setNiveau(gA);
+        ajouterReleve(rT); ajouterReleve(rA);
+        if (gT != Gravite.normal) gestionnaire.declencherAlerte(rT, gT);
+        if (gA != Gravite.normal) gestionnaire.declencherAlerte(rA, gA);
     }
-    @Override public String getTypeNom() { return "Biométrique"; }
-    public Seuil getSeuilTemperature() { return seuilTemperature; }
-    public Seuil getSeuilActivite() { return seuilActivite; }
+    @Override public String getTypeNom()    { return "Biométrique"; }
+    public Seuil getSeuilTemperature()      { return seuilTemperature; }
+    public Seuil getSeuilActivite()         { return seuilActivite; }
 }
 
 class CapteurGPS extends Capteur {
@@ -386,412 +376,379 @@ class CapteurGPS extends Capteur {
     public CapteurGPS(String id, String zoneId) { super(id, zoneId); }
     @Override public void envoyerReleve() {
         if (statut != StatutCapteur.ACTIVE) return;
-        Random rand = new Random();
-        this.latitude = 43.5 + (rand.nextDouble() - 0.5) * 0.1;
-        this.longitude = 1.5 + (rand.nextDouble() - 0.5) * 0.1;
+        Random r = new Random();
+        this.latitude  = 43.5 + (r.nextDouble() - 0.5) * 0.1;
+        this.longitude = 1.5  + (r.nextDouble() - 0.5) * 0.1;
         historiquePositions.add(new double[]{latitude, longitude});
-        ReleveGPS releveGPS = new ReleveGPS(this.id, latitude, longitude);
-        this.ajouterReleve(releveGPS);
+        ajouterReleve(new ReleveGPS(id, latitude, longitude));
     }
     public boolean estHorsLimites(double latMin, double latMax, double lonMin, double lonMax) {
         return latitude < latMin || latitude > latMax || longitude < lonMin || longitude > lonMax;
     }
-    public double getLatitude() { return latitude; }
+    public double getLatitude()  { return latitude; }
     public double getLongitude() { return longitude; }
     public List<double[]> getHistoriquePositions() { return Collections.unmodifiableList(historiquePositions); }
     @Override public String getTypeNom() { return "GPS"; }
 }
 
-// ========== CLASSES DU BINÔME (ZONES, CULTURES, ANIMAUX, FERME, APP) ==========
-class Interval {
-    private int min, max;
-    public Interval(int min, int max) { this.min = min; this.max = max; }
-    public int getMin() { return min; }
-    public int getMax() { return max; }
-}
-class GeographicalLimits {
-    private String description;
-    public GeographicalLimits(String description) { this.description = description; }
-    public String getDescription() { return description; }
-}
-class EnregistrementProduction {
-    private String type; private double quantite; private LocalDateTime date;
-    public EnregistrementProduction(String type, double quantite) { this.type = type; this.quantite = quantite; this.date = LocalDateTime.now(); }
-    @Override public String toString() { return String.format("%s : %.2f le %s", type, quantite, date); }
-}
-
-abstract class Zone implements Suspendable {
-    private int code; private String nom; private TypeZone type; private StatutZone statut; private boolean estSuspendu; private int nbrEntite;
-    private List<Capteur> capteurs = new ArrayList<>();
-    private List<EnregistrementProduction> productions = new ArrayList<>();
-    public Zone(int code, String nom, TypeZone type) {
-        this.code = code; this.nom = nom; this.type = type; this.statut = StatutZone.ACTIVE; this.estSuspendu = false;
-    }
-    public int getCode() { return code; }
-    public String getNom() { return nom; }
-    public TypeZone getType() { return type; }
-    public StatutZone getStatut() { return statut; }
-    @Override public boolean estSuspendu() { return estSuspendu; }
-    public int getNbrEntite() { return nbrEntite; }
-    public void setNbrEntite(int n) { nbrEntite = n; }
-    public void setNom(String nom) { this.nom = nom; }
-    public void setStatut(StatutZone statut) { this.statut = statut; }
-    public void setEstSuspendu(boolean estSuspendu) { this.estSuspendu = estSuspendu; }
-    public List<Capteur> getCapteurs() { return capteurs; }
-    public void ajouterCapteur(Capteur c) { capteurs.add(c); }
-    public List<EnregistrementProduction> getProductions() { return productions; }
-    public void ajouterProduction(EnregistrementProduction p) { productions.add(p); }
-    @Override public void suspendre() { this.estSuspendu = true; for (Capteur c : capteurs) c.suspendre(); }
-    @Override public void desactiver() { this.statut = StatutZone.INACTIVE; }
-    @Override public void reactiver() { this.statut = StatutZone.ACTIVE; this.estSuspendu = false; for (Capteur c : capteurs) c.reactiver(); }
-}
-
-// Cultures
-abstract class Culture {
-    private FamilleCulture famille; private String datePlantation; private String dateRecolte; private StadeCroissance stadeCroissance;
-    private Interval exigencePH, exigenceHumidite; private int temperature, humidite, pleuviometrie, pH, teneurAzote;
-    public Culture(FamilleCulture f, String dp, String dr, Interval ph, Interval h) {
-        famille = f; datePlantation = dp; dateRecolte = dr; exigencePH = ph; exigenceHumidite = h; stadeCroissance = StadeCroissance.semis;
-    }
-    public FamilleCulture getFamille() { return famille; }
-    public String getDatePlantation() { return datePlantation; }
-    public String getDateRecolte() { return dateRecolte; }
-    public StadeCroissance getStadeCroissance() { return stadeCroissance; }
-    public void setStadeCroissance(StadeCroissance s) { stadeCroissance = s; }
-    public Interval getExigencePH() { return exigencePH; }
-    public Interval getExigenceHumidite() { return exigenceHumidite; }
-    public int getTemperature() { return temperature; }
-    public void setTemperature(int t) { temperature = t; }
-    public int getHumidite() { return humidite; }
-    public void setHumidite(int h) { humidite = h; }
-    public int getPleuviometrie() { return pleuviometrie; }
-    public void setPleuviometrie(int p) { pleuviometrie = p; }
-    public int getPH() { return pH; }
-    public void setPH(int pH) { this.pH = pH; }
-    public int getTeneurAzote() { return teneurAzote; }
-    public void setTeneurAzote(int az) { teneurAzote = az; }
-    public String conditionCroissance() { return "PH : ["+exigencePH.getMin()+","+exigencePH.getMax()+"]\nHumidité : ["+exigenceHumidite.getMin()+","+exigenceHumidite.getMax()+"]\n"; }
-    public String afficherStats() { return "PH : "+pH+"\nHumidité : "+humidite+"\nPluviométrie : "+pleuviometrie+"\nTempérature : "+temperature+"\n"; }
-}
-class Cereal extends Culture { public Cereal(FamilleCulture f, String dp, String dr, Interval ph, Interval h) { super(f,dp,dr,ph,h); } }
-class Legume extends Culture { public Legume(FamilleCulture f, String dp, String dr, Interval ph, Interval h) { super(f,dp,dr,ph,h); } }
-class Fruit extends Culture { public Fruit(FamilleCulture f, String dp, String dr, Interval ph, Interval h) { super(f,dp,dr,ph,h); } }
-
-class ZoneCulture extends Zone {
-    private List<Culture> cultures = new ArrayList<>();
-    public ZoneCulture(int code, String nom, TypeZone type) { super(code, nom, type); }
-    public void ajouterCulture(Culture c) { cultures.add(c); }
-    public List<Culture> getCultures() { return cultures; }
-}
-class ZoneElevage extends Zone {
-    private List<Animal> animals = new ArrayList<>();
-    private GeographicalLimits limitZone;
-    private List<ProgAlimentation> programme = new ArrayList<>();
-    private TypeZoneElevage typeZoneElevage;
-    public ZoneElevage(int code, String nom, TypeZone type, TypeZoneElevage te, GeographicalLimits limit) {
-        super(code, nom, type);
-        typeZoneElevage = te;
-        limitZone = limit;
-    }
-    public TypeZoneElevage getTypeZoneElevage() { return typeZoneElevage; }
-    public GeographicalLimits getLimitZone() { return limitZone; }
-    public List<Animal> getAnimals() { return animals; }
-    public void ajouterAnimal(Animal a) { animals.add(a); }
-    public void ajouterRuminant(Ruminant r) { animals.add(r); }
-    public void ajouterVollaile(Volaille v) { animals.add(v); }
-    public List<ProgAlimentation> getProgramme() { return programme; }
-    public void ajouterProgAlimentation(ProgAlimentation p) { programme.add(p); }
-}
-class ZoneAquacole extends Zone {
-    private List<Aquacole> aquacoles = new ArrayList<>();
-    private List<ProgAlimentation> programme = new ArrayList<>();
-    public ZoneAquacole(int code, String nom, TypeZone type) { super(code, nom, type); }
-    public void ajouterAquacole(Aquacole a) { aquacoles.add(a); }
-    public List<Aquacole> getAquacoles() { return aquacoles; }
-    public List<ProgAlimentation> getProgramme() { return programme; }
-    public void ajouterProgAlimentation(ProgAlimentation p) { programme.add(p); }
-}
-
-abstract class Animal {
-    private int id; private String nom; private int temperature; private int nivActivite; private TypeEspece espece; private int age, poid; private EtatSante etatSante;
-    public Animal(int id, TypeEspece espece, String nom) { this.id = id; this.espece = espece; this.nom = nom; this.etatSante = EtatSante.sain; }
-    public int getId() { return id; }
-    public String getNom() { return nom; }
-    public int getTemperature() { return temperature; }
-    public void setTemperature(int t) { temperature = t; }
-    public int getNivActivite() { return nivActivite; }
-    public void setNivActivite(int na) { nivActivite = na; }
-    public TypeEspece getEspece() { return espece; }
-    public int getAge() { return age; }
-    public void setAge(int a) { age = a; }
-    public int getPoid() { return poid; }
-    public void setPoid(int p) { poid = p; }
-    public EtatSante getEtatSante() { return etatSante; }
-    public void setEtatSante(EtatSante e) { etatSante = e; }
-    @Override public String toString() { return "Animal{id="+id+", nom='"+nom+"', espece="+espece+", age="+age+", poids="+poid+", état="+etatSante+'}'; }
-}
-class Ruminant extends Animal implements Entite { public Ruminant(int id, TypeEspece e, String nom) { super(id,e,nom); } @Override public void AjoutterAnimal(String a) {} }
-class Volaille extends Animal implements Entite { public Volaille(int id, TypeEspece e, String nom) { super(id,e,nom); } @Override public void AjoutterAnimal(String a) {} }
-class Aquacole extends Animal implements Entite { public Aquacole(int id, TypeEspece e, String nom) { super(id,e,nom); } @Override public void AjoutterAnimal(String a) {} }
-
-class ProgAlimentation {
-    private String typeAliment; private double quantite;
-    public ProgAlimentation(String type, double q) { typeAliment = type; quantite = q; }
-    public String getTypeAliment() { return typeAliment; }
-    public double getQuantite() { return quantite; }
-}
-
-class Ferme {
-    private String nom; private List<Zone> zones = new ArrayList<>();
-    public Ferme(String nom) { this.nom = nom; }
-    public String getNom() { return nom; }
-    public List<Zone> getZones() { return zones; }
-    public void ajouterZoneElevage(ZoneElevage z) { zones.add(z); }
-    public void ajouterZoneCulture(ZoneCulture z) { zones.add(z); }
-    public void ajouterZoneAquacole(ZoneAquacole z) { zones.add(z); }
-    public void supprimerZone(Zone z) { zones.remove(z); }
-}
-
-class App {
-    private String nom; private Ferme ferme; private GestionnaireCapteursAlertes gestionnaire = GestionnaireCapteursAlertes.getInstance();
-    public App(String nom, Ferme ferme) { this.nom = nom; this.ferme = ferme; }
-    public void desactiverZone(Zone zone) { zone.suspendre(); }
-    public void reactiverZone(Zone zone) { zone.reactiver(); }
-    public void ajouterCulture(Culture culture, ZoneCulture zone) { zone.ajouterCulture(culture); }
-    public void ajouterRuminant(Ruminant r, ZoneElevage zone) { if (zone.getTypeZoneElevage()==TypeZoneElevage.Ruminant) zone.ajouterAnimal(r); }
-    public void ajouterVolaille(Volaille v, ZoneElevage zone) { if (zone.getTypeZoneElevage()==TypeZoneElevage.Volaille) zone.ajouterAnimal(v); }
-    public void ajouterAquacole(Aquacole a, ZoneAquacole zone) { zone.ajouterAquacole(a); }
-    public String afficherZones() {
-        StringBuilder sb = new StringBuilder("===== ZONES DE LA FERME : "+ferme.getNom()+" =====\n\n");
-        for (Zone z : ferme.getZones()) {
-            sb.append("Code : ").append(z.getCode()).append("\nNom : ").append(z.getNom()).append("\nType : ").append(z.getType())
-                    .append("\nStatut : ").append(z.getStatut()).append("\nSuspendu : ").append(z.estSuspendu()).append("\nNb entités : ").append(z.getNbrEntite()).append("\n--- Capteurs ---\n");
-            for (Capteur c : z.getCapteurs()) sb.append("  ").append(c.getId()).append(" (").append(c.getTypeNom()).append(") - ").append(c.getStatut()).append("\n");
-            if (z instanceof ZoneCulture zc) {
-                sb.append("--- Cultures ---\n");
-                for (Culture c : zc.getCultures()) sb.append("Famille : ").append(c.getFamille()).append("\n").append(c.conditionCroissance()).append(c.afficherStats()).append("\n");
-            } else if (z instanceof ZoneElevage ze) {
-                sb.append("--- Animaux ---\n");
-                for (Animal a : ze.getAnimals()) sb.append(a).append("\n");
-                sb.append("--- Programme alimentation ---\n");
-                for (ProgAlimentation p : ze.getProgramme()) sb.append(p.getTypeAliment()).append(" : ").append(p.getQuantite()).append("\n");
-            } else if (z instanceof ZoneAquacole za) {
-                sb.append("--- Aquacoles ---\n");
-                for (Aquacole a : za.getAquacoles()) sb.append(a).append("\n");
-                sb.append("--- Programme alimentation ---\n");
-                for (ProgAlimentation p : za.getProgramme()) sb.append(p.getTypeAliment()).append(" : ").append(p.getQuantite()).append("\n");
-            }
-            sb.append("\n====================================\n\n");
-        }
-        return sb.toString();
-    }
-}
-
-// ========== CLASSE PRINCIPALE AVEC MENU ==========
+// ============================================================
+//  MENU — : Capteurs & Alertes
+// ============================================================
 public class Main {
-    private static Scanner scanner = new Scanner(System.in);
-    private static App app;
-    private static Ferme ferme;
-    private static GestionnaireCapteursAlertes gestionnaire = GestionnaireCapteursAlertes.getInstance();
 
+    private static final Scanner sc = new Scanner(System.in);
+    private static final GestionnaireCapteursAlertes gestion = GestionnaireCapteursAlertes.getInstance();
+    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    // ── MAIN ─────────────────────────────────────────────────────
     public static void main(String[] args) {
-        ferme = new Ferme("Smart Farm");
-        app = new App("Farm Manager", ferme);
-
-        // Zone culture
-        ZoneCulture zoneCulture = new ZoneCulture(1, "Zone Ble", TypeZone.culture);
-        Interval ph = new Interval(6,8); Interval hum = new Interval(40,70);
-        Cereal ble = new Cereal(FamilleCulture.Cereal, "01/02/2026", "01/07/2026", ph, hum);
-        ble.setPH(7); ble.setHumidite(55); ble.setTemperature(25); ble.setPleuviometrie(120);
-        app.ajouterCulture(ble, zoneCulture);
-        ferme.ajouterZoneCulture(zoneCulture);
-
-        // Zone élevage ruminant
-        GeographicalLimits limit = new GeographicalLimits("Nord Ferme");
-        ZoneElevage zoneElevage = new ZoneElevage(2, "Zone Vaches", TypeZone.elevage, TypeZoneElevage.Ruminant, limit);
-        Ruminant vache1 = new Ruminant(101, TypeEspece.ruminant, "Vache A");
-        vache1.setAge(4); vache1.setPoid(450); vache1.setEtatSante(EtatSante.sain); vache1.setTemperature(38);
-        app.ajouterRuminant(vache1, zoneElevage);
-        zoneElevage.ajouterProgAlimentation(new ProgAlimentation("Herbe", 5.5));
-        ferme.ajouterZoneElevage(zoneElevage);
-
-        // Zone volaille
-        ZoneElevage zonePoulet = new ZoneElevage(3, "Zone Poulets", TypeZone.elevage, TypeZoneElevage.Volaille, new GeographicalLimits("Sud Ferme"));
-        Volaille poulet = new Volaille(201, TypeEspece.volaille, "Poulet 1");
-        poulet.setAge(1); poulet.setPoid(2); poulet.setEtatSante(EtatSante.sain);
-        app.ajouterVolaille(poulet, zonePoulet);
-        zonePoulet.ajouterProgAlimentation(new ProgAlimentation("Graines", 0.5));
-        ferme.ajouterZoneElevage(zonePoulet);
-
-        // Zone aquacole
-        ZoneAquacole zoneAquacole = new ZoneAquacole(4, "Bassin Poissons", TypeZone.aquacole);
-        Aquacole poisson = new Aquacole(301, TypeEspece.aqua, "Tilapia");
-        poisson.setAge(2); poisson.setEtatSante(EtatSante.sain);
-        app.ajouterAquacole(poisson, zoneAquacole);
-        zoneAquacole.ajouterProgAlimentation(new ProgAlimentation("Granules", 2.3));
-        ferme.ajouterZoneAquacole(zoneAquacole);
-
-        int choix;
-        do {
-            System.out.println("\n========== MENU PRINCIPAL ==========");
-            System.out.println("1. Afficher toutes les zones");
-            System.out.println("2. Ajouter un capteur à une zone");
-            System.out.println("3. Envoyer un relevé (simulation) pour un capteur");
-            System.out.println("4. Afficher tableau de bord d'une zone (dernier relevé avec couleur)");
-            System.out.println("5. Afficher l'historique complet d'un capteur");
-            System.out.println("6. Afficher l'évolution des relevés de tous les capteurs d'une zone");
-            System.out.println("7. Changer le statut d'un capteur");
-            System.out.println("8. Afficher les alertes actives (triées)");
-            System.out.println("9. Acquitter une alerte");
-            System.out.println("10. Supprimer une alerte");
-            System.out.println("11. Filtrer l'historique des alertes");
-            System.out.println("0. Quitter");
-            System.out.print("Votre choix : ");
-            choix = scanner.nextInt();
-            scanner.nextLine();
-
-            switch (choix) {
-                case 1 -> System.out.println(app.afficherZones());
-                case 2 -> ajouterCapteur();
-                case 3 -> envoyerReleve();
-                case 4 -> afficherTableauBord();
-                case 5 -> afficherHistoriqueCapteur();
-                case 6 -> afficherEvolutionZone();
-                case 7 -> changerStatutCapteur();
-                case 8 -> System.out.println(gestionnaire.afficherAlertesActives());
-                case 9 -> acquitterAlerte();
-                case 10 -> supprimerAlerte();
-                case 11 -> filtrerAlertes();
-                case 0 -> System.out.println("Au revoir !");
-                default -> System.out.println("Choix invalide.");
+        initialiserDemo();
+        boolean actif = true;
+        while (actif) {
+            afficherMenuPrincipal();
+            switch (lireInt()) {
+                case 1: menuCapteurs(); break;
+                case 2: menuAlertes();  break;
+                case 0: actif = false; System.out.println("\n[INFO] Au revoir !\n"); break;
+                default: System.out.println("[!] Choix invalide.");
             }
-        } while (choix != 0);
-        scanner.close();
+        }
     }
 
+    // ── DEMO ─────────────────────────────────────────────────────
+    private static void initialiserDemo() {
+        System.out.println("\n[INFO] Chargement des données de démonstration...");
+        CapteurEnvironnemental cTemp = new CapteurEnvironnemental("C-ENV-01","Z1",TypeMesure.TEMPERATURE,new Seuil(15,35));
+        CapteurEnvironnemental cHum  = new CapteurEnvironnemental("C-ENV-02","Z1",TypeMesure.HUMIDITE,   new Seuil(40,80));
+        CapteurSol             cPh   = new CapteurSol("C-SOL-01","Z1",TypeMesure.PH_SOL,           new Seuil(5.5,7.5));
+        CapteurBiometrique     cBio  = new CapteurBiometrique("C-BIO-01","Z2",new Seuil(37.0,39.5),new Seuil(20,120));
+        CapteurGPS             cGps  = new CapteurGPS("C-GPS-01","Z2");
+        CapteurEau             cEau  = new CapteurEau("C-EAU-01","Z3",TypeMesure.PH_EAU,           new Seuil(6.5,8.5));
+        CapteurEau             cO2   = new CapteurEau("C-EAU-02","Z3",TypeMesure.OXYGENE_DISSOUS,  new Seuil(4.0,12.0));
+        for (Capteur c : new Capteur[]{cTemp,cHum,cPh,cBio,cGps,cEau,cO2}) gestion.ajouterCapteur(c);
+        for (int i = 0; i < 6; i++) {
+            cTemp.envoyerReleve(); cHum.envoyerReleve(); cPh.envoyerReleve();
+            cBio.envoyerReleve();  cGps.envoyerReleve(); cEau.envoyerReleve(); cO2.envoyerReleve();
+        }
+        System.out.println("[INFO] 7 capteurs (Z1=Culture, Z2=Élevage, Z3=Aquacole) chargés.\n");
+    }
+
+    // ── MENUS ─────────────────────────────────────────────────────
+    private static void afficherMenuPrincipal() {
+        System.out.println();
+        System.out.println("╔══════════════════════════════════════════════╗");
+        System.out.println("║      SMART FARMING – CAPTEURS & ALERTES      ║");
+        System.out.println("╠══════════════════════════════════════════════╣");
+        System.out.println("║   1. Gérer les capteurs                      ║");
+        System.out.println("║   2. Gérer les alertes                       ║");
+        System.out.println("║   0. Quitter                                 ║");
+        System.out.println("╚══════════════════════════════════════════════╝");
+        System.out.print("Votre choix : ");
+    }
+
+    private static void menuCapteurs() {
+        boolean actif = true;
+        while (actif) {
+            System.out.println();
+            System.out.println("┌──────────────────────────────────────────────┐");
+            System.out.println("│           GESTION DES CAPTEURS               │");
+            System.out.println("├──────────────────────────────────────────────┤");
+            System.out.println("│  1. Ajouter / configurer un capteur          │");
+            System.out.println("│  2. Tableau de bord par zone                 │");
+            System.out.println("│  3. Historique d'un capteur (filtre dates)   │");
+            System.out.println("│  4. Changer le statut d'un capteur           │");
+            System.out.println("│  5. Simuler l'envoi de relevés               │");
+            System.out.println("│  6. Graphique évolution par capteur          │");
+            System.out.println("│  7. Graphique évolution par zone             │");
+            System.out.println("│  0. Retour                                   │");
+            System.out.println("└──────────────────────────────────────────────┘");
+            System.out.print("Choix : ");
+            switch (lireInt()) {
+                case 1: ajouterCapteur();    break;
+                case 2: tableauBordZone();   break;
+                case 3: historiqueCapteur(); break;
+                case 4: changerStatut();     break;
+                case 5: simulerReleves();    break;
+                case 6: graphiqueCapteur();  break;
+                case 7: graphiqueZone();     break;
+                case 0: actif = false;       break;
+                default: System.out.println("[!] Choix invalide.");
+            }
+        }
+    }
+
+    private static void menuAlertes() {
+        boolean actif = true;
+        while (actif) {
+            System.out.println();
+            System.out.println("┌──────────────────────────────────────────────┐");
+            System.out.println("│            GESTION DES ALERTES               │");
+            System.out.println("├──────────────────────────────────────────────┤");
+            System.out.println("│  1. Afficher les alertes actives             │");
+            System.out.println("│  2. Acquitter une alerte                     │");
+            System.out.println("│  3. Supprimer une alerte                     │");
+            System.out.println("│  4. Historique des alertes (filtrable)       │");
+            System.out.println("│  0. Retour                                   │");
+            System.out.println("└──────────────────────────────────────────────┘");
+            System.out.print("Choix : ");
+            switch (lireInt()) {
+                case 1: System.out.println(gestion.afficherAlertesActives()); break;
+                case 2: acquitterAlerte();   break;
+                case 3: supprimerAlerte();   break;
+                case 4: historiqueAlertes(); break;
+                case 0: actif = false;       break;
+                default: System.out.println("[!] Choix invalide.");
+            }
+        }
+    }
+
+    // ── 1. AJOUTER UN CAPTEUR ─────────────────────────────────────
     private static void ajouterCapteur() {
-        System.out.print("Nom de la zone (Zone Ble, Zone Vaches, Zone Poulets, Bassin Poissons) : ");
-        String zoneNom = scanner.nextLine();
-        Zone zone = trouverZoneParNom(zoneNom);
-        if (zone == null) { System.out.println("Zone non trouvée."); return; }
-        System.out.print("Type de capteur (1=Environnemental,2=Sol,3=Eau,4=Biométrique,5=GPS) : ");
-        int type = scanner.nextInt(); scanner.nextLine();
-        System.out.print("Identifiant du capteur : ");
-        String id = scanner.nextLine();
-        System.out.print("Seuil min : "); double min = scanner.nextDouble();
-        System.out.print("Seuil max : "); double max = scanner.nextDouble(); scanner.nextLine();
-        Seuil seuil = new Seuil(min, max);
+        System.out.println("\n--- NOUVEAU CAPTEUR ---");
+        System.out.print("ID du capteur : "); String id = lireString();
+        if (gestion.getCapteurById(id) != null) { System.out.println("[!] ID déjà utilisé."); return; }
+        System.out.print("Zone ID       : "); String zone = lireString();
+        System.out.println("\nType : 1=Environnemental  2=Sol  3=Eau  4=Biométrique  5=GPS");
+        System.out.print("Choix : ");
         Capteur capteur = null;
         try {
-            switch (type) {
-                case 1 -> { System.out.print("Type mesure (TEMPERATURE, HUMIDITE, PLUVIOMETRIE) : ");
-                    TypeMesure tm = TypeMesure.valueOf(scanner.nextLine().toUpperCase());
-                    capteur = new CapteurEnvironnemental(id, zone.getNom(), tm, seuil); }
-                case 2 -> { System.out.print("Type mesure (PH_SOL, HUMIDITE_SOL, AZOTE) : ");
-                    TypeMesure tm = TypeMesure.valueOf(scanner.nextLine().toUpperCase());
-                    capteur = new CapteurSol(id, zone.getNom(), tm, seuil); }
-                case 3 -> { System.out.print("Type mesure (TEMPERATURE_EAU, OXYGENE_DISSOUS, PH_EAU) : ");
-                    TypeMesure tm = TypeMesure.valueOf(scanner.nextLine().toUpperCase());
-                    capteur = new CapteurEau(id, zone.getNom(), tm, seuil); }
-                case 4 -> { System.out.print("Seuil température (min max) : ");
-                    double tMin = scanner.nextDouble(); double tMax = scanner.nextDouble();
-                    System.out.print("Seuil activité (min max) : ");
-                    double aMin = scanner.nextDouble(); double aMax = scanner.nextDouble(); scanner.nextLine();
-                    capteur = new CapteurBiometrique(id, zone.getNom(), new Seuil(tMin, tMax), new Seuil(aMin, aMax)); }
-                case 5 -> capteur = new CapteurGPS(id, zone.getNom());
-                default -> { System.out.println("Type invalide"); return; }
+            switch (lireInt()) {
+                case 1: capteur = construireEnvironnemental(id, zone); break;
+                case 2: capteur = construireSol(id, zone);             break;
+                case 3: capteur = construireEau(id, zone);             break;
+                case 4: capteur = construireBiometrique(id, zone);     break;
+                case 5: capteur = new CapteurGPS(id, zone); System.out.println("[OK] GPS créé."); break;
+                default: System.out.println("[!] Type invalide."); return;
             }
-            gestionnaire.ajouterCapteur(capteur);
-            zone.ajouterCapteur(capteur);
-            System.out.println("Capteur ajouté.");
-        } catch(Exception e) { System.out.println("Erreur : "+e.getMessage()); }
+        } catch (IllegalArgumentException e) { System.out.println("[ERREUR] " + e.getMessage()); return; }
+        gestion.ajouterCapteur(capteur);
+        System.out.println("[OK] Capteur « " + id + " » ajouté à la zone " + zone + ".");
     }
 
-    private static void envoyerReleve() {
-        System.out.print("Identifiant du capteur : ");
-        String id = scanner.nextLine();
-        Capteur c = trouverCapteurParId(id);
-        if (c == null) { System.out.println("Capteur inconnu."); return; }
-        c.envoyerReleve();
-        System.out.println("Relevé envoyé.");
+    private static CapteurEnvironnemental construireEnvironnemental(String id, String zone) {
+        TypeMesure t = choisirParmi(new String[]{"TEMPERATURE","HUMIDITE","PLUVIOMETRIE"},
+                new TypeMesure[]{TypeMesure.TEMPERATURE,TypeMesure.HUMIDITE,TypeMesure.PLUVIOMETRIE});
+        System.out.println("Seuils pour " + t + " :"); return new CapteurEnvironnemental(id,zone,t,lireSeuil());
+    }
+    private static CapteurSol construireSol(String id, String zone) {
+        TypeMesure t = choisirParmi(new String[]{"PH_SOL","HUMIDITE_SOL","AZOTE"},
+                new TypeMesure[]{TypeMesure.PH_SOL,TypeMesure.HUMIDITE_SOL,TypeMesure.AZOTE});
+        System.out.println("Seuils pour " + t + " :"); return new CapteurSol(id,zone,t,lireSeuil());
+    }
+    private static CapteurEau construireEau(String id, String zone) {
+        TypeMesure t = choisirParmi(new String[]{"TEMPERATURE_EAU","OXYGENE_DISSOUS","PH_EAU"},
+                new TypeMesure[]{TypeMesure.TEMPERATURE_EAU,TypeMesure.OXYGENE_DISSOUS,TypeMesure.PH_EAU});
+        System.out.println("Seuils pour " + t + " :"); return new CapteurEau(id,zone,t,lireSeuil());
+    }
+    private static CapteurBiometrique construireBiometrique(String id, String zone) {
+        System.out.println("Seuil température corporelle (°C) :"); Seuil st = lireSeuil();
+        System.out.println("Seuil activité (pas/min) :");          Seuil sa = lireSeuil();
+        return new CapteurBiometrique(id, zone, st, sa);
+    }
+    private static TypeMesure choisirParmi(String[] labels, TypeMesure[] options) {
+        for (int i = 0; i < options.length; i++) System.out.println("  " + (i+1) + ". " + labels[i]);
+        System.out.print("Choix : ");
+        int idx = lireInt() - 1;
+        if (idx < 0 || idx >= options.length) throw new IllegalArgumentException("Type invalide.");
+        return options[idx];
+    }
+    private static Seuil lireSeuil() {
+        System.out.print("  Min : "); double min = lireDouble();
+        System.out.print("  Max : "); double max = lireDouble();
+        return new Seuil(min, max);
     }
 
-    private static void afficherTableauBord() {
-        System.out.print("Nom de la zone : ");
-        String zoneNom = scanner.nextLine();
-        Zone zone = trouverZoneParNom(zoneNom);
-        if (zone == null) { System.out.println("Zone non trouvée."); return; }
-        System.out.println(gestionnaire.afficherTableauBordZone(zone.getNom()));
+    // ── 2. TABLEAU DE BORD ────────────────────────────────────────
+    private static void tableauBordZone() {
+        System.out.print("Zone ID : ");
+        System.out.println(gestion.afficherTableauBordZone(lireString()));
     }
 
-    private static void afficherHistoriqueCapteur() {
-        System.out.print("Identifiant du capteur : ");
-        String id = scanner.nextLine();
-        System.out.println(gestionnaire.afficherEvolutionReleves(id));
+    // ── 3. HISTORIQUE ─────────────────────────────────────────────
+    private static void historiqueCapteur() {
+        System.out.print("ID du capteur : ");
+        Capteur capteur = gestion.getCapteurById(lireString());
+        if (capteur == null) { System.out.println("[!] Capteur inconnu."); return; }
+        System.out.print("Filtrer par période ? (o/n) : ");
+        if (lireString().equalsIgnoreCase("o")) {
+            LocalDateTime debut = lireDateTime("Date début (yyyy-MM-dd HH:mm) : ");
+            LocalDateTime fin   = lireDateTime("Date fin   (yyyy-MM-dd HH:mm) : ");
+            List<Releve> releves = capteur.filtrerRelevesParDate(debut, fin);
+            if (releves.isEmpty()) { System.out.println("[INFO] Aucun relevé dans cette période."); return; }
+            System.out.println("\n=== HISTORIQUE FILTRÉ – " + capteur.getId() + " ===");
+            System.out.printf("%-26s %-18s %-12s%n", "Timestamp", "Valeur", "Niveau");
+            System.out.println("─".repeat(58));
+            for (Releve r : releves)
+                System.out.printf("%-26s %-18s %-12s%n", r.getTimestamp().format(DTF), r.getValeurAsString(), r.getNiveau());
+        } else {
+            System.out.println(gestion.afficherEvolutionReleves(capteur.getId()));
+        }
     }
 
-    private static void afficherEvolutionZone() {
-        System.out.print("Nom de la zone : ");
-        String zoneNom = scanner.nextLine();
-        Zone zone = trouverZoneParNom(zoneNom);
-        if (zone == null) { System.out.println("Zone non trouvée."); return; }
-        System.out.println(gestionnaire.afficherEvolutionRelevesZone(zone.getNom()));
+    // ── 4. CHANGER STATUT ─────────────────────────────────────────
+    private static void changerStatut() {
+        System.out.print("ID du capteur : ");
+        Capteur capteur = gestion.getCapteurById(lireString());
+        if (capteur == null) { System.out.println("[!] Capteur inconnu."); return; }
+        System.out.println("Statut actuel : " + capteur.getStatut());
+        System.out.println("1=ACTIVE  2=INACTIVE(défaillant)  3=SUSPENDU");
+        System.out.print("Choix : ");
+        switch (lireInt()) {
+            case 1: capteur.reactiver();                           System.out.println("[OK] → ACTIVE.");    break;
+            case 2: capteur.changerStatut(StatutCapteur.INACTIVE); System.out.println("[OK] → INACTIVE.");  break;
+            case 3: capteur.suspendre();                           System.out.println("[OK] → SUSPENDU.");  break;
+            default: System.out.println("[!] Choix invalide.");
+        }
     }
 
-    private static void changerStatutCapteur() {
-        System.out.print("Identifiant du capteur : ");
-        String id = scanner.nextLine();
-        Capteur c = trouverCapteurParId(id);
-        if (c == null) { System.out.println("Capteur inconnu."); return; }
-        System.out.print("Nouveau statut (ACTIVE, INACTIVE, SUSPENDU) : ");
-        StatutCapteur statut = StatutCapteur.valueOf(scanner.nextLine().toUpperCase());
-        c.changerStatut(statut);
-        System.out.println("Statut modifié.");
+    // ── 5. SIMULER RELEVES ────────────────────────────────────────
+    private static void simulerReleves() {
+        System.out.println("1=Un capteur  2=Tous les capteurs d'une zone  3=Tous les capteurs actifs");
+        System.out.print("Choix : ");
+        switch (lireInt()) {
+            case 1: {
+                System.out.print("ID du capteur : ");
+                Capteur c = gestion.getCapteurById(lireString());
+                if (c == null) { System.out.println("[!] Capteur inconnu."); return; }
+                System.out.print("Nombre de relevés : "); int n = Math.max(1, lireInt());
+                for (int i = 0; i < n; i++) c.envoyerReleve();
+                System.out.println("[OK] " + n + " relevé(s) pour " + c.getId() + ".");
+                break;
+            }
+            case 2: {
+                System.out.print("Zone ID : "); String zone = lireString();
+                List<Capteur> liste = gestion.getCapteursParZone(zone);
+                if (liste.isEmpty()) { System.out.println("[!] Zone inconnue ou vide."); return; }
+                System.out.print("Nombre de relevés par capteur : "); int n = Math.max(1, lireInt());
+                for (Capteur c : liste) for (int i = 0; i < n; i++) c.envoyerReleve();
+                System.out.println("[OK] " + n + " × " + liste.size() + " capteur(s).");
+                break;
+            }
+            case 3: {
+                System.out.print("Nombre de relevés par capteur : "); int n = Math.max(1, lireInt());
+                int count = 0;
+                for (Capteur c : gestion.getTousCapteurs())
+                    if (c.getStatut() == StatutCapteur.ACTIVE) {
+                        for (int i = 0; i < n; i++) c.envoyerReleve(); count++;
+                    }
+                System.out.println("[OK] " + n + " × " + count + " capteur(s) actif(s).");
+                break;
+            }
+            default: System.out.println("[!] Choix invalide.");
+        }
     }
 
+    // ── 6. GRAPHIQUE PAR CAPTEUR ──────────────────────────────────
+    private static void graphiqueCapteur() {
+        System.out.print("ID du capteur : ");
+        Capteur capteur = gestion.getCapteurById(lireString());
+        if (capteur == null) { System.out.println("[!] Capteur inconnu."); return; }
+        List<ReleveNumerique> nums = extraireNumeriques(capteur.getHistoriqueReleves());
+        if (nums.isEmpty()) { System.out.println("[INFO] Aucun relevé numérique."); return; }
+        afficherGraphiqueASCII("CAPTEUR " + capteur.getId() + " (" + capteur.getTypeNom() + ")", nums);
+    }
+
+    // ── 7. GRAPHIQUE PAR ZONE ─────────────────────────────────────
+    private static void graphiqueZone() {
+        System.out.print("Zone ID : "); String zone = lireString();
+        List<Capteur> capteurs = gestion.getCapteursParZone(zone);
+        if (capteurs.isEmpty()) { System.out.println("[!] Aucun capteur dans cette zone."); return; }
+        System.out.println(gestion.afficherEvolutionRelevesZone(zone));
+        for (Capteur c : capteurs) {
+            List<ReleveNumerique> nums = extraireNumeriques(c.getHistoriqueReleves());
+            if (!nums.isEmpty())
+                afficherGraphiqueASCII("ZONE " + zone + " | " + c.getId() + " (" + c.getTypeNom() + ")", nums);
+        }
+    }
+
+    // ── GRAPHIQUE ASCII ───────────────────────────────────────────
+    private static List<ReleveNumerique> extraireNumeriques(List<Releve> releves) {
+        List<ReleveNumerique> res = new ArrayList<>();
+        for (Releve r : releves) if (r instanceof ReleveNumerique) res.add((ReleveNumerique) r);
+        return res;
+    }
+
+    private static void afficherGraphiqueASCII(String titre, List<ReleveNumerique> releves) {
+        int debut = Math.max(0, releves.size() - 20);
+        List<ReleveNumerique> s = releves.subList(debut, releves.size());
+        double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
+        for (ReleveNumerique r : s) { if (r.getValeur() < min) min = r.getValeur(); if (r.getValeur() > max) max = r.getValeur(); }
+        double range = (max - min == 0) ? 1 : max - min;
+        int hauteur = 10;
+        System.out.println("\n╔══ GRAPHIQUE : " + titre);
+        System.out.printf("║  Unité=%-8s  Min=%.2f  Max=%.2f  Relevés=%d%n", s.get(0).getUnite(), min, max, s.size());
+        System.out.println("╠══════════════════════════════════════════════════════╣");
+        for (int row = hauteur; row >= 0; row--) {
+            System.out.printf("║ %7.2f │", min + (range * row / hauteur));
+            for (ReleveNumerique r : s) {
+                double norm = (r.getValeur() - min) / range * hauteur;
+                if (norm >= row - 0.5) {
+                    switch (r.getNiveau()) {
+                        case critique:      System.out.print("█ "); break;
+                        case avertissement: System.out.print("▒ "); break;
+                        default:            System.out.print("░ "); break;
+                    }
+                } else System.out.print("  ");
+            }
+            System.out.println("║");
+        }
+        System.out.print("║         └"); for (int i = 0; i < s.size(); i++) System.out.print("──"); System.out.println("║");
+        System.out.print("║          "); for (int i = 1; i <= s.size(); i++) System.out.printf("%-2s", (i%5==0)?String.valueOf(i):"."); System.out.println("║");
+        System.out.println("╠══════════════════════════════════════════════════════╣");
+        System.out.println("║  Légende :  ░ Normal   ▒ Avertissement   █ Critique ║");
+        System.out.println("╚══════════════════════════════════════════════════════╝");
+    }
+
+    // ── ALERTES ───────────────────────────────────────────────────
     private static void acquitterAlerte() {
-        System.out.print("ID de l'alerte : ");
-        long id = scanner.nextLong();
-        if (gestionnaire.acquitterAlerte(id)) System.out.println("Alerte acquittée.");
-        else System.out.println("Échec.");
+        System.out.println(gestion.afficherAlertesActives());
+        System.out.print("ID de l'alerte à acquitter : "); long id = lireLong();
+        System.out.println(gestion.acquitterAlerte(id) ? "[OK] Alerte #"+id+" acquittée." : "[!] Introuvable.");
     }
 
     private static void supprimerAlerte() {
-        System.out.print("ID de l'alerte : ");
-        long id = scanner.nextLong();
-        if (gestionnaire.supprimerAlerte(id)) System.out.println("Alerte supprimée.");
-        else System.out.println("Échec.");
+        System.out.println(gestion.afficherAlertesActives());
+        System.out.print("ID de l'alerte à supprimer : "); long id = lireLong();
+        System.out.println(gestion.supprimerAlerte(id) ? "[OK] Alerte #"+id+" supprimée." : "[!] Introuvable.");
     }
 
-    private static void filtrerAlertes() {
-        System.out.print("Zone (nom ou vide) : ");
-        String zoneNom = scanner.nextLine();
-        String zoneId = zoneNom.isEmpty() ? null : zoneNom;
-        System.out.print("Type mesure (ou vide) : ");
-        String tmStr = scanner.nextLine();
-        TypeMesure type = tmStr.isEmpty() ? null : TypeMesure.valueOf(tmStr.toUpperCase());
-        System.out.print("Niveau (normal, avertissement, critique ou vide) : ");
-        String nivStr = scanner.nextLine();
-        Gravite niveau = nivStr.isEmpty() ? null : Gravite.valueOf(nivStr);
-        System.out.print("Date début (AAAA-MM-JJTHH:MM:SS ou vide) : ");
-        String debutStr = scanner.nextLine();
-        LocalDateTime debut = debutStr.isEmpty() ? null : LocalDateTime.parse(debutStr);
-        System.out.print("Date fin (AAAA-MM-JJTHH:MM:SS ou vide) : ");
-        String finStr = scanner.nextLine();
-        LocalDateTime fin = finStr.isEmpty() ? null : LocalDateTime.parse(finStr);
-        List<Alerte> resultats = gestionnaire.filtrerAlertes(zoneId, type, niveau, debut, fin);
-        System.out.println("=== ALERTES FILTRÉES ===");
-        for (Alerte a : resultats)
-            System.out.printf("ID:%d | Niveau:%s | Capteur:%s | Date:%s | Valeur:%s%n",
-                    a.getId(), a.getNiveau(), a.getReleve().getIdCapteur(), a.getDateCreation(), a.getReleve().getValeurAsString());
+    private static void historiqueAlertes() {
+        System.out.println("\n--- FILTRES (Entrée = ignorer) ---");
+        System.out.print("Zone ID (vide = toutes) : "); String zone = lireString();
+        TypeMesure[] types = TypeMesure.values();
+        System.out.println("Type de mesure :"); System.out.println("  0. Tous");
+        for (int i = 0; i < types.length; i++) System.out.println("  " + (i+1) + ". " + types[i]);
+        System.out.print("Choix : "); int tm = lireInt();
+        TypeMesure typeMesure = (tm >= 1 && tm <= types.length) ? types[tm-1] : null;
+        System.out.println("Niveau : 0=Tous  1=normal  2=avertissement  3=critique");
+        System.out.print("Choix : ");
+        Gravite niveau = null;
+        switch (lireInt()) { case 1: niveau=Gravite.normal; break; case 2: niveau=Gravite.avertissement; break; case 3: niveau=Gravite.critique; break; }
+        LocalDateTime debut = null, fin = null;
+        System.out.print("Filtrer par période ? (o/n) : ");
+        if (lireString().equalsIgnoreCase("o")) {
+            debut = lireDateTime("Date début (yyyy-MM-dd HH:mm) : ");
+            fin   = lireDateTime("Date fin   (yyyy-MM-dd HH:mm) : ");
+        }
+        List<Alerte> alertes = gestion.filtrerAlertes(zone.isEmpty() ? null : zone, typeMesure, niveau, debut, fin);
+        if (alertes.isEmpty()) { System.out.println("[INFO] Aucune alerte ne correspond."); return; }
+        System.out.println("\n=== HISTORIQUE (" + alertes.size() + " résultat(s)) ===");
+        System.out.printf("%-6s  %-15s  %-15s  %-20s  %-12s  %s%n","ID","Capteur","Niveau","Date","Valeur","Acquittée");
+        System.out.println("─".repeat(82));
+        for (Alerte a : alertes)
+            System.out.printf("%-6d  %-15s  %-15s  %-20s  %-12s  %s%n",
+                    a.getId(), a.getReleve().getIdCapteur(), a.getNiveau(),
+                    a.getDateCreation().format(DTF), a.getReleve().getValeurAsString(), a.isAcquittee()?"Oui":"Non");
     }
 
-    private static Zone trouverZoneParNom(String nom) {
-        for (Zone z : ferme.getZones()) if (z.getNom().equalsIgnoreCase(nom)) return z;
-        return null;
-    }
-    private static Capteur trouverCapteurParId(String id) {
-        for (Zone z : ferme.getZones()) for (Capteur c : z.getCapteurs()) if (c.getId().equals(id)) return c;
-        return null;
+    // ── UTILITAIRES ───────────────────────────────────────────────
+    private static int    lireInt()    { try { return Integer.parseInt(sc.nextLine().trim()); } catch (NumberFormatException e) { return -1; } }
+    private static long   lireLong()   { try { return Long.parseLong(sc.nextLine().trim()); }  catch (NumberFormatException e) { return -1L; } }
+    private static double lireDouble() { try { return Double.parseDouble(sc.nextLine().trim().replace(',','.')); } catch (NumberFormatException e) { System.out.println("[!] 0 utilisé."); return 0.0; } }
+    private static String lireString() { return sc.nextLine().trim(); }
+    private static LocalDateTime lireDateTime(String prompt) {
+        while (true) { System.out.print(prompt);
+            try { return LocalDateTime.parse(sc.nextLine().trim(), DTF); }
+            catch (DateTimeParseException e) { System.out.println("[!] Format : yyyy-MM-dd HH:mm"); } }
     }
 }
