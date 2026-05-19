@@ -54,10 +54,10 @@ class Ferme {
         System.out.println("=========================================");
     }
 
-    public List<Alerte> filtrerAlertes(String zoneId, Gravite niveau,
+    public List<Alerte> filtrerAlertes(long Id, Gravite niveau,
                                        LocalDateTime debut, LocalDateTime fin) {
         return alertes.stream()
-                .filter(a -> (zoneId == null || a.getZoneId().equals(zoneId)))
+                .filter(a -> (a.getId()==(Id)))
                 .filter(a -> (niveau == null || a.getNiveau() == niveau))
                 .filter(a -> (debut == null || !a.getDateCreation().isBefore(debut)))
                 .filter(a -> (fin == null || !a.getDateCreation().isAfter(fin)))
@@ -108,7 +108,7 @@ class App {
         capteur.envoyerReleve();
         for (Releve r : capteur.getHistoriqueReleves()) {
             if (r.getNiveau() != Gravite.normal) {
-                Alerte alerte = new Alerte(r, r.getNiveau(), String.valueOf(zone.getCode()));
+                Alerte alerte = new Alerte(r, r.getNiveau());
                 ferme.ajouterAlerte(alerte);
             }
         }
@@ -122,7 +122,7 @@ class App {
                 Releve dernier = releves.get(releves.size() - 1);
                 dernier.setNiveau(Gravite.critique);
 
-                Alerte alerte = new Alerte(dernier, Gravite.critique, String.valueOf(zone.getCode()));
+                Alerte alerte = new Alerte(dernier, Gravite.critique);
                 ferme.ajouterAlerte(alerte);
             }
         }
