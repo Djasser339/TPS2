@@ -156,8 +156,8 @@ class CapteurGPS extends Capteur {
         historiquePositions.add(new double[]{latitude, longitude});
         ajouterReleve(new ReleveGPS(id, latitude, longitude));
     }
-    public boolean estHorsLimites(double latMin, double latMax, double lonMin, double lonMax) {
-        return latitude < latMin || latitude > latMax || longitude < lonMin || longitude > lonMax;
+    public boolean estHorsLimites(GeographicalLimits limits) {
+        return latitude < limits.getLatMin() || latitude > limits.getLatMax() || longitude < limits.getLonMin() || longitude > limits.getLonMax();
     }
     public double getLatitude()  { return latitude; }
     public double getLongitude() { return longitude; }
