@@ -254,15 +254,38 @@ class GestionnaireCapteursAlertes {
     public List<Capteur> getCapteursParZone(String zoneId) {
         return capteursParZone.getOrDefault(zoneId, Collections.emptyList());
     }
-
-    // ---- Tableau de bord zone ----
     public String afficherTableauBordZone(String zoneId) {
         List<Capteur> capteurs = getCapteursParZone(zoneId);
         if (capteurs.isEmpty()) return "Aucun capteur dans la zone " + zoneId;
         StringBuilder sb = new StringBuilder("\n--- TABLEAU DE BORD - ZONE " + zoneId + " ---\n");
         for (Capteur c : capteurs) {
+
+            // 1. Capteur suspendu → afficher SUSPENDU peu importe l'historique
+            if (c.getStatut() == StatutCapteur.SUSPENDU) {
+                sb.append("  Capteur ").append(c.getId())
+                        .append(" (").append(c.getTypeNom()).append(")")
+                        .append(" : \u001B[33mSUSPENDU\u001B[0m\n");
+                continue;
+            }
+
+            // 2. Capteur inactif
+            if (c.getStatut() == StatutCapteur.INACTIVE) {
+                sb.append("  Capteur ").append(c.getId())
+                        .append(" (").append(c.getTypeNom()).append(")")
+                        .append(" : \u001B[31mINACTIF\u001B[0m\n");
+                continue;
+            }
+
+            // 3. Capteur actif sans relevé encore
             List<Releve> hist = c.getHistoriqueReleves();
-            if (hist.isEmpty()) { sb.append("  Capteur ").append(c.getId()).append(" : aucun relevé\n"); continue; }
+            if (hist.isEmpty()) {
+                sb.append("  Capteur ").append(c.getId())
+                        .append(" (").append(c.getTypeNom()).append(")")
+                        .append(" : actif - aucun relevé encore\n");
+                continue;
+            }
+
+            // 4. Capteur actif avec relevés → afficher dernier relevé
             Releve dernier = hist.get(hist.size() - 1);
             String niveauStr, couleur;
             switch (dernier.getNiveau()) {
@@ -309,13 +332,22 @@ class GestionnaireCapteursAlertes {
                 .sorted((a1, a2) -> a2.getNiveau().compareTo(a1.getNiveau()))
                 .collect(Collectors.toList());
         if (actives.isEmpty()) return "Aucune alerte active.";
+
         StringBuilder sb = new StringBuilder("\n=== ALERTES ACTIVES ===\n");
-        for (Alerte a : actives)
-            sb.append("ID: ").append(a.getId())
-                    .append(" | Niveau: ").append(a.getNiveau())
-                    .append(" | Capteur: ").append(a.getReleve().getIdCapteur())
-                    .append(" | Date: ").append(a.getDateCreation())
-                    .append(" | Valeur: ").append(a.getReleve().getValeurAsString()).append("\n");
+        sb.append(String.format("%-5s  %-20s  %-10s  %-15s  %-16s  %s%n",
+                "ID", "Zone", "Capteur", "Niveau", "Date", "Valeur"));
+        sb.append("─".repeat(80)).append("\n");
+        for (Alerte a : actives) {
+            Capteur c = capteursParId.get(a.getReleve().getIdCapteur());
+            String zone = (c != null) ? c.getZoneId() : "?";
+            sb.append(String.format("%-5d  %-20s  %-10s  %-15s  %-16s  %s%n",
+                    a.getId(),
+                    zone,
+                    a.getReleve().getIdCapteur(),
+                    a.getNiveau(),
+                    a.getDateCreation().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                    a.getReleve().getValeurAsString()));
+        }
         return sb.toString();
     }
 
@@ -350,17 +382,19 @@ class GestionnaireCapteursAlertes {
     }
 
     // ---- Graphique couleur ----
+    // ---- Graphique couleur ----
     public void afficherGraphiqueCapteur(Capteur capteur) {
         List<Releve> releves = capteur.getHistoriqueReleves();
         System.out.println("=== Graphique : Capteur " + capteur.getId() + " ===");
         for (Releve r : releves) {
-            String indicateur;
+            String couleur, niveau;
             switch (r.getNiveau()) {
-                case critique:      indicateur = "[ROUGE  CRITIQUE     ]"; break;
-                case avertissement: indicateur = "[ORANGE AVERTISSEMENT]"; break;
-                default:            indicateur = "[VERT   NORMAL       ]"; break;
+                case critique:      couleur = "\u001B[31m"; niveau = "CRITIQUE";      break;
+                case avertissement: couleur = "\u001B[33m"; niveau = "AVERTISSEMENT"; break;
+                default:            couleur = "\u001B[32m"; niveau = "NORMAL";        break;
             }
-            System.out.println(indicateur + " " + r.getTimestamp().toLocalTime()
+            System.out.println(couleur + "[" + niveau + "]\u001B[0m"
+                    + " " + r.getTimestamp().toLocalTime()
                     + " -> " + r.getValeurAsString());
         }
         System.out.println("==========================================");
@@ -1622,7 +1656,7 @@ public class Main {
             }
         } catch (IllegalArgumentException e) { System.out.println("[ERREUR] " + e.getMessage()); return; }
 
-        zone.ajouterCapteur(capteur);
+        //zone.ajouterCapteur(capteur);
         gestionnaire.ajouterCapteur(capteur);
 
         if (zone instanceof ZoneCulture zc) {
@@ -1747,23 +1781,54 @@ public class Main {
         System.out.print("ID du capteur : ");
         Capteur capteur = gestionnaire.getCapteurById(lireString());
         if (capteur == null) { System.out.println("[!] Capteur inconnu."); return; }
-        List<ReleveNumerique> nums = extraireNumeriques(capteur.getHistoriqueReleves());
-        if (nums.isEmpty()) { System.out.println("[INFO] Aucun relevé numérique."); return; }
-        afficherGraphiqueASCII("CAPTEUR " + capteur.getId() + " (" + capteur.getTypeNom() + ")", nums);
-    }
 
+        List<ReleveNumerique> nums = extraireNumeriques(capteur.getHistoriqueReleves());
+        if (nums.isEmpty()) {
+            if (!capteur.getHistoriqueReleves().isEmpty())
+                System.out.println("[INFO] Capteur " + capteur.getId()
+                        + " (" + capteur.getTypeNom() + ") : pas de données numériques à grapher.");
+            else
+                System.out.println("[INFO] Aucun relevé pour ce capteur.");
+            return;
+        }
+
+        Map<TypeMesure, List<ReleveNumerique>> parType = new LinkedHashMap<>();
+        for (ReleveNumerique r : nums)
+            parType.computeIfAbsent(r.getTypeMesure(), k -> new ArrayList<>()).add(r);
+
+        for (Map.Entry<TypeMesure, List<ReleveNumerique>> entry : parType.entrySet()) {
+            afficherGraphiqueASCII(
+                    "CAPTEUR " + capteur.getId() + " – " + entry.getKey(),
+                    entry.getValue()
+            );
+        }
+    }
     private static void graphiqueASCIIZone() {
         System.out.print("Nom de la zone : ");
         Zone zone = trouverZoneParNom(lireString());
         if (zone == null) { System.out.println("[!] Zone non trouvée."); return; }
         List<Capteur> capteurs = gestionnaire.getCapteursParZone(zone.getNom());
         if (capteurs.isEmpty()) { System.out.println("[!] Aucun capteur dans cette zone."); return; }
-        System.out.println(gestionnaire.afficherEvolutionRelevesZone(zone.getNom()));
+
         for (Capteur c : capteurs) {
             List<ReleveNumerique> nums = extraireNumeriques(c.getHistoriqueReleves());
-            if (!nums.isEmpty())
-                afficherGraphiqueASCII("ZONE " + zone.getNom() + " | " + c.getId()
-                        + " (" + c.getTypeNom() + ")", nums);
+            if (nums.isEmpty()) {
+                if (!c.getHistoriqueReleves().isEmpty())
+                    System.out.println("[INFO] Capteur " + c.getId()
+                            + " (" + c.getTypeNom() + ") : pas de données numériques à grapher.");
+                continue;
+            }
+            Map<TypeMesure, List<ReleveNumerique>> parType = new LinkedHashMap<>();
+            for (ReleveNumerique r : nums)
+                parType.computeIfAbsent(r.getTypeMesure(), k -> new ArrayList<>()).add(r);
+
+            for (Map.Entry<TypeMesure, List<ReleveNumerique>> entry : parType.entrySet()) {
+                afficherGraphiqueASCII(
+                        "ZONE " + zone.getNom() + " | " + c.getId()
+                                + " (" + c.getTypeNom() + ") – " + entry.getKey(),
+                        entry.getValue()
+                );
+            }
         }
     }
 
@@ -1794,42 +1859,74 @@ public class Main {
     private static void afficherGraphiqueASCII(String titre, List<ReleveNumerique> releves) {
         int debut = Math.max(0, releves.size() - 20);
         List<ReleveNumerique> s = releves.subList(debut, releves.size());
+
         double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
         for (ReleveNumerique r : s) {
             if (r.getValeur() < min) min = r.getValeur();
             if (r.getValeur() > max) max = r.getValeur();
         }
-        double range   = (max - min == 0) ? 1 : max - min;
+        double range  = (max - min == 0) ? 1 : max - min;
         int    hauteur = 10;
+
+        // Largeur du contenu intérieur (entre ║ et ║)
+        // prefixe "  xxx.xx │" = 10 chars, barres = 2*n chars
+        int contenu = Math.max(10 + s.size() * 2, 54);
+
+        String sep = "═".repeat(contenu);
+
         System.out.println("\n╔══ GRAPHIQUE : " + titre);
         System.out.printf("║  Unité=%-8s  Min=%.2f  Max=%.2f  Relevés=%d%n",
                 s.get(0).getUnite(), min, max, s.size());
-        System.out.println("╠══════════════════════════════════════════════════════╣");
-        for (int row = hauteur; row >= 0; row--) {
-            System.out.printf("║ %7.2f │", min + (range * row / hauteur));
+        System.out.println("╠" + sep + "╣");
+
+        // Barres
+        for (int row = hauteur; row >= 1; row--) {
+            StringBuilder ligne = new StringBuilder();
+            ligne.append(String.format("║ %7.2f │", min + (range * row / hauteur)));
             for (ReleveNumerique r : s) {
                 double norm = (r.getValeur() - min) / range * hauteur;
                 if (norm >= row - 0.5) {
                     switch (r.getNiveau()) {
-                        case critique:      System.out.print("█ "); break;
-                        case avertissement: System.out.print("▒ "); break;
-                        default:            System.out.print("░ "); break;
+                        case critique:      ligne.append("█ "); break;
+                        case avertissement: ligne.append("▒ "); break;
+                        default:            ligne.append("░ "); break;
                     }
-                } else System.out.print("  ");
+                } else {
+                    ligne.append("  ");
+                }
             }
-            System.out.println("║");
+            // Compléter jusqu'à contenu puis fermer
+            while (ligne.length() < contenu + 1) ligne.append(" ");
+            ligne.append("║");
+            System.out.println(ligne);
         }
-        System.out.print("║         └");
-        for (int i = 0; i < s.size(); i++) System.out.print("──");
-        System.out.println("║");
-        System.out.print("║          ");
-        for (int i = 1; i <= s.size(); i++) System.out.printf("%-2s", (i % 5 == 0) ? String.valueOf(i) : ".");
-        System.out.println("║");
-        System.out.println("╠══════════════════════════════════════════════════════╣");
-        System.out.println("║  Légende :  ░ Normal   ▒ Avertissement   █ Critique ║");
-        System.out.println("╚══════════════════════════════════════════════════════╝");
-    }
 
+        // Axe X — ligne de base : "║         └" + "──"*n + espaces + "╢"
+        StringBuilder axe = new StringBuilder("║         └");
+        for (int i = 0; i < s.size(); i++) axe.append("──");
+        while (axe.length() < contenu + 1) axe.append(" ");
+        axe.append("╢");
+        System.out.println(axe);
+
+        // Numéros axe X
+        StringBuilder nums = new StringBuilder("║          ");
+        for (int i = 1; i <= s.size(); i++) {
+            if (i % 5 == 0) nums.append(String.format("%2d", i));
+            else             nums.append(". ");
+        }
+        while (nums.length() < contenu + 1) nums.append(" ");
+        nums.append("║");
+        System.out.println(nums);
+
+        // Légende
+        String legende = "  Légende :  ░ Normal   ▒ Avertissement   █ Critique";
+        System.out.println("╠" + sep + "╣");
+        StringBuilder leg = new StringBuilder("║" + legende);
+        while (leg.length() < contenu + 1) leg.append(" ");
+        leg.append("║");
+        System.out.println(leg);
+        System.out.println("╚" + sep + "╝");
+    }
     // ==========================================================
     // ==================== ACTIONS ALERTES =====================
     // ==========================================================

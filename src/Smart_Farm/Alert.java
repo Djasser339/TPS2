@@ -6,7 +6,8 @@ package Smart_Farm;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-
+import java.util.stream.*;
+import java.time.format.DateTimeFormatter;
 // ==================== ALERTE ====================
 class Alerte {
     private static long compteur = 0;
@@ -91,7 +92,23 @@ class GestionnaireCapteursAlertes {
         }
         return sb.toString();
     }
-
+    // ---- Graphique couleur ----
+    public void afficherGraphiqueCapteur(Capteur capteur) {
+        List<Releve> releves = capteur.getHistoriqueReleves();
+        System.out.println("=== Graphique : Capteur " + capteur.getId() + " ===");
+        for (Releve r : releves) {
+            String couleur, niveau;
+            switch (r.getNiveau()) {
+                case critique:      couleur = "\u001B[31m"; niveau = "CRITIQUE";      break;
+                case avertissement: couleur = "\u001B[33m"; niveau = "AVERTISSEMENT"; break;
+                default:            couleur = "\u001B[32m"; niveau = "NORMAL";        break;
+            }
+            System.out.println(couleur + "[" + niveau + "]\u001B[0m"
+                    + " " + r.getTimestamp().toLocalTime()
+                    + " -> " + r.getValeurAsString());
+        }
+        System.out.println("==========================================");
+    }
     public String afficherEvolutionReleves(String idCapteur) {
         Capteur capteur = capteursParId.get(idCapteur);
         if (capteur == null) return "Capteur inconnu : " + idCapteur;
@@ -115,17 +132,29 @@ class GestionnaireCapteursAlertes {
 
     public String afficherAlertesActives() {
         List<Alerte> actives = new ArrayList<>();
-        for (Alerte a : alertes) if (!a.isAcquittee() && !a.isSupprimee()) actives.add(a);
+        for (Alerte a : alertes)
+            if (!a.isAcquittee() && !a.isSupprimee()) actives.add(a);
         actives.sort((a1, a2) -> a2.getNiveau().compareTo(a1.getNiveau()));
         if (actives.isEmpty()) return "Aucune alerte active.";
+
         StringBuilder sb = new StringBuilder("\n=== ALERTES ACTIVES ===\n");
-        for (Alerte a : actives)
-            sb.append("ID: ").append(a.getId()).append(" | Niveau: ").append(a.getNiveau())
-                    .append(" | Capteur: ").append(a.getReleve().getIdCapteur())
-                    .append(" | Date: ").append(a.getDateCreation())
-                    .append(" | Valeur: ").append(a.getReleve().getValeurAsString()).append("\n");
+        sb.append(String.format("%-6s  %-18s  %-15s  %-15s  %-20s  %s%n",
+                "ID", "Zone", "Capteur", "Niveau", "Date", "Valeur"));
+        sb.append("─".repeat(85)).append("\n");
+        for (Alerte a : actives) {
+            Capteur c = capteursParId.get(a.getReleve().getIdCapteur());
+            String zone = (c != null) ? c.getZoneId() : "?";
+            sb.append(String.format("%-6d  %-18s  %-15s  %-15s  %-20s  %s%n",
+                    a.getId(),
+                    zone,
+                    a.getReleve().getIdCapteur(),
+                    a.getNiveau(),
+                    a.getDateCreation().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                    a.getReleve().getValeurAsString()));
+        }
         return sb.toString();
     }
+
 
     public boolean acquitterAlerte(long id) {
         for (Alerte a : alertes) if (a.getId() == id && !a.isSupprimee()) { a.acquitter(); return true; }
