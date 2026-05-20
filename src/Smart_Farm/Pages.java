@@ -1,4 +1,4 @@
 package Smart_Farm;
 
-public class pages {
+public class Pages {
 }

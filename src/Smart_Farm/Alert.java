@@ -10,21 +10,15 @@ import java.util.*;
 // ==================== ALERTE ====================
 class Alerte {
     private static long compteur = 0;
-   private final long id;
-  private final Releve releve;
-    private final String zoneId;   // add this field
-
-    public Alerte(Releve releve, Gravite niveau, String zoneId) {
-        this.id = ++compteur; this.releve = releve; this.niveau = niveau;
-        this.zoneId = zoneId;
-        this.dateCreation = LocalDateTime.now(); this.acquittee = false; this.supprimee = false;
-    }
-
-    public String getZoneId() { return zoneId; }
-   private final Gravite niveau;
+    private final long id;
+    private final Releve releve;
+    private final Gravite niveau;
     private final LocalDateTime dateCreation;
     private boolean acquittee, supprimee;
-
+    public Alerte(Releve releve, Gravite niveau) {
+        this.id = ++compteur; this.releve = releve; this.niveau = niveau;
+        this.dateCreation = LocalDateTime.now(); this.acquittee = false; this.supprimee = false;
+    }
     public void acquitter()              { this.acquittee = true; }
     public void supprimer()              { this.supprimee = true; }
     public long getId()                  { return id; }
@@ -34,7 +28,6 @@ class Alerte {
     public boolean isAcquittee()         { return acquittee; }
     public boolean isSupprimee()         { return supprimee; }
 }
-
 
 // ==================== GESTIONNAIRE GLOBAL ====================
 class GestionnaireCapteursAlertes {
