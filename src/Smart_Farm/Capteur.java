@@ -1,18 +1,9 @@
 package Smart_Farm;
-
-// ==================== CAPTEUR (ABSTRACT) ====================
-
-import Smart_Farm.StatutCapteur;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
-
-
-// Suspendable !!
 
 // ==================== CAPTEUR (ABSTRACT) ====================
 abstract class Capteur implements Suspendable {
