@@ -1,4 +1,5 @@
 package Smart_Farm;
+
 // ==================== PROGRAMME ALIMENTATION ====================
 
 class ProgAlimentation {
@@ -17,4 +18,9 @@ class ProgAlimentation {
     public void setDescription(String description) { this.description = description; }
     public void setQuantite(double quantite) { this.quantite = quantite; }
     public void setTypeAliment(String typeAliment) { this.typeAliment = typeAliment; }
+
+    @Override
+    public String toString() {
+        return typeAliment + " : " + quantite + " kg";
+    }
 }
