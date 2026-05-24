@@ -63,6 +63,10 @@ class Ferme {
                 .filter(a -> (fin == null || !a.getDateCreation().isAfter(fin)))
                 .collect(Collectors.toList());
     }
+
+    // METHODES UI
+
+
 }
 
 // ==================== APP ====================

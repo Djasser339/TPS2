@@ -1,0 +1,878 @@
+/* =========================
+   ROOT
+========================= */
+
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-background-color: #F4F7F2;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.top-bar {
+
+    -fx-background-color: white;
+
+    -fx-border-color: #DADADA;
+    -fx-border-width: 0 0 1 0;
+
+    -fx-pref-height: 70;
+}
+
+.top-title {
+
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+
+    -fx-text-fill: #2E5E3B;
+}
+
+.top-date {
+
+    -fx-font-size: 15px;
+    -fx-text-fill: #666666;
+}
+
+.farm-name {
+
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+
+    -fx-text-fill: #3D7A4E;
+}
+
+/* =========================
+   NAV BAR
+========================= */
+
+.nav-bar {
+
+    -fx-background-color: #2E5E3B;
+
+    -fx-pref-width: 260;
+}
+
+/* =========================
+   NAV BUTTON
+========================= */
+
+.nav-button {
+
+    -fx-background-color: transparent;
+
+    -fx-text-fill: white;
+
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+
+    -fx-alignment: CENTER_LEFT;
+
+    -fx-padding: 0 0 0 20;
+
+    -fx-background-radius: 10;
+}
+
+.nav-button:hover {
+
+    -fx-background-color: #4E8B61;
+
+    -fx-cursor: hand;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.widget-card {
+    -fx-background-color: white;
+    -fx-border-color: #DADADA;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0, 0, 2);
+}
+
+/* =========================
+   SEARCH FIELD SIMPLE
+========================= */
+.search-field {
+
+    -fx-background-color: white;
+
+    -fx-border-color: #DADADA;
+    -fx-border-width: 1;
+
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+
+    -fx-padding: 8 15;
+
+    -fx-font-size: 15px;
+
+    -fx-prompt-text-fill: #888888;
+}
+
+/* focus */
+.search-field:focused {
+    -fx-border-color: #3D7A4E;
+    -fx-border-width: 2;
+}
+
+/* =========================
+   PRIMARY BUTTON (FARM THEME)
+========================= */
+
+.primary-button {
+
+    -fx-background-color: #2E5E3B;   /* même couleur que navbar */
+
+    -fx-text-fill: white;
+
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+
+    -fx-alignment: CENTER;
+
+    -fx-background-radius: 10;
+
+    -fx-padding: 8 15;
+}
+
+/* hover */
+.primary-button:hover {
+
+    -fx-background-color: #4E8B61;
+
+    -fx-cursor: hand;
+}
+
+/* click */
+.primary-button:pressed {
+
+    -fx-background-color: #1F3F28;
+}
+
+
+//-------------------------------------------------------------------------------
+
+/* =========================
+   GLOBAL FORM STYLE
+========================= */
+
+.form-global {
+    -fx-background-color: #F4F7F2;
+    -fx-padding: 25;
+    -fx-font-family: "Segoe UI";
+}
+
+/* =========================
+   FORM CARD CONTAINER
+========================= */
+
+.form-global .form-card {
+    -fx-background-color: #2b3a2b;
+    -fx-background-radius: 18;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 20, 0.2, 0, 5);
+}
+
+/* =========================
+   LABELS
+========================= */
+
+.form-global .form-label {
+    -fx-text-fill: #d7f7d7;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* =========================
+   TEXT FIELD
+========================= */
+
+.form-global .text-field {
+    -fx-background-color: #1f2f1f;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-border-color: transparent;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+    -fx-prompt-text-fill: #7fa87f;
+}
+
+.form-global .text-field:focused {
+    -fx-border-color: #4caf50;
+    -fx-border-width: 2;
+}
+
+
+
+
+/* =========================
+   DATE PICKER BASE
+========================= */
+
+.form-global .date-picker {
+    -fx-background-color: linear-gradient(to bottom, #1b2a1b, #132113);
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #2e7d32;
+    -fx-border-width: 1;
+}
+
+/* =========================
+   CHAMP TEXTE (DATE AFFICHÉE)
+========================= */
+
+.form-global .date-picker .text-field {
+    -fx-background-color: #1b2a1b;
+    -fx-text-fill: #eaffea;
+    -fx-font-size: 13px;
+    -fx-alignment: center;
+    -fx-background-radius: 12;
+    -fx-padding: 8;
+}
+
+/* focus */
+.form-global .date-picker:focused {
+    -fx-border-color: #4caf50;
+    -fx-border-width: 2;
+}
+
+/* =========================
+   BOUTON CALENDRIER
+========================= */
+
+.form-global .date-picker .arrow-button {
+    -fx-background-color: linear-gradient(to bottom, #2e7d32, #1b5e20);
+    -fx-background-radius: 0 14 14 0;
+}
+
+.form-global .date-picker .arrow-button .arrow {
+    -fx-background-color: white;
+}
+
+/* =========================
+   POPUP CALENDRIER
+========================= */
+
+.form-global .date-picker-popup {
+    -fx-background-color: #0f1a0f;
+    -fx-border-color: #4caf50;
+    -fx-border-width: 2;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.35), 25, 0.3, 0, 6);
+}
+
+/* header mois/année */
+.form-global .date-picker .month-year-pane {
+    -fx-background-color: #1b2a1b;
+    -fx-text-fill: white;
+}
+
+/* =========================
+   GRILLE CALENDRIER
+========================= */
+
+.form-global .date-picker .calendar-grid {
+    -fx-background-color: #0f1a0f;
+}
+
+/* =========================
+   CASES JOURS (IMPORTANT)
+========================= */
+
+.form-global .date-picker .day-cell,
+.form-global .date-picker .date-cell,
+.form-global .date-picker .cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #eaffea;
+    -fx-alignment: center;
+    -fx-font-size: 12px;
+}
+
+/* hover jour */
+.form-global .date-picker .day-cell:hover,
+.form-global .date-picker .date-cell:hover {
+    -fx-background-color: #2e7d32;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+}
+
+/* jour sélectionné */
+.form-global .date-picker .selected,
+.form-global .date-picker .selected-date {
+    -fx-background-color: #4caf50;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* jour actuel */
+.form-global .date-picker .today {
+    -fx-border-color: #81c784;
+    -fx-border-width: 2;
+    -fx-background-radius: 6;
+}
+
+/* jours hors mois */
+.form-global .date-picker .previous-month,
+.form-global .date-picker .next-month {
+    -fx-text-fill: #6a8f6a;
+    -fx-opacity: 0.6;
+}
+
+/* =========================
+   SPINNER GLOBAL
+========================= */
+
+.form-global .spinner {
+    -fx-background-color: #1f2f1f;
+    -fx-background-radius: 10;
+    -fx-padding: 0;
+}
+
+/* champ numérique */
+.form-global .spinner .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-alignment: center;
+}
+
+/* boutons flèches */
+.form-global .spinner .increment-arrow-button,
+.form-global .spinner .decrement-arrow-button {
+    -fx-background-color: #2e7d32;
+    -fx-background-radius: 0;
+}
+
+/* hover flèches */
+.form-global .spinner .increment-arrow-button:hover,
+.form-global .spinner .decrement-arrow-button:hover {
+    -fx-background-color: #4caf50;
+}
+
+/* icône flèche */
+.form-global .spinner .increment-arrow,
+.form-global .spinner .decrement-arrow {
+    -fx-background-color: white;
+}
+
+/* =========================
+   RADIO BUTTON
+========================= */
+
+.form-global .radio-button {
+    -fx-text-fill: #4E8B61;
+    -fx-font-size: 13px;
+}
+
+.form-global .radio-button .radio {
+    -fx-border-color: #4caf50;
+    -fx-border-radius: 10;
+    -fx-background-color: transparent;
+}
+
+.form-global .radio-button:selected .radio {
+    -fx-background-color: #4caf50;
+}
+
+
+/* =========================
+   TITLE
+========================= */
+
+.form-global .form-title {
+    -fx-text-fill: #bff5bf;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.form-global .form-button {
+    -fx-background-color: linear-gradient(to right, #4caf50, #2e7d32);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 14;
+    -fx-padding: 10 25;
+}
+
+.form-global .form-button:hover {
+    -fx-background-color: linear-gradient(to right, #66bb6a, #388e3c);
+}
+
+.form-global .form-button:pressed {
+    -fx-scale-x: 0.97;
+    -fx-scale-y: 0.97;
+}
+
+
+/* =========================
+   COMBO BOX (MENU DEROULANT)
+========================= */
+
+.form-global .combo-box {
+    -fx-background-color: #1f2f1f;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+}
+
+.form-global .combo-box .list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: #1f2f1f;
+}
+
+/* =========================
+   SLIDER (RANGE STYLE VISUEL)
+========================= */
+
+.form-global .slider {
+    -fx-control-inner-background: #2e4a2e;
+}
+
+.form-global .slider .track {
+    -fx-background-color: #355c35;
+}
+
+.form-global .slider .thumb {
+    -fx-background-color: #4caf50;
+}
+
+/* =========================
+   SPINNER (PH / HUMIDITE)
+========================= */
+
+.form-global .spinner {
+    -fx-background-color: #1f2f1f;
+    -fx-background-radius: 10;
+}
+
+.form-global .spinner .text-field {
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+}
+
+/* =========================
+   DATE PICKER MODERNE
+========================= */
+
+.form-global .date-picker {
+    -fx-background-color: #1f2f1f;
+    -fx-background-radius: 10;
+}
+
+.form-global .date-picker .text-field {
+    -fx-text-fill: white;
+}
+
+.form-global .date-picker .arrow-button {
+    -fx-background-color: #4caf50;
+    -fx-background-radius: 0 10 10 0;
+}
+
+.form-global .date-picker-popup {
+    -fx-background-color: #233523;
+    -fx-border-color: #4caf50;
+}
+
+//------------------------------------------------------------------
+
+
+/* =========================
+TABLE MODERN
+========================= */
+
+.table-container {
+
+    -fx-background-color: white;
+
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+
+    -fx-border-color: #dfe9df;
+    -fx-border-width: 1;
+
+    -fx-effect:
+            dropshadow(
+                    gaussian,
+                    rgba(0,0,0,0.08),
+                    18,
+                    0.15,
+                    0,
+                    4
+            );
+}
+
+/* =========================
+TABLE
+========================= */
+
+.farm-table {
+
+    -fx-background-color: transparent;
+}
+
+/* =========================
+HEADER
+========================= */
+
+.table-header {
+
+    -fx-background-color: linear-gradient(
+            to bottom,
+            #4caf50,
+            #3f9443
+    );
+
+    -fx-text-fill: white;
+
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+
+    -fx-padding: 16 20;
+
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+}
+
+/* =========================
+CELL
+========================= */
+
+.table-cell {
+
+    -fx-background-color: white;
+
+    -fx-text-fill: #244224;
+
+    -fx-font-size: 13px;
+
+    -fx-padding: 14 18;
+
+    -fx-border-color: #edf2ed;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Hover */
+
+.table-cell:hover {
+
+    -fx-background-color: #f5fbf5;
+}
+
+/* =========================
+SCROLL
+========================= */
+
+.table-scroll {
+
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+
+    -fx-border-color: transparent;
+}
+
+.table-scroll > .viewport {
+
+    -fx-background-color: transparent;
+}
+
+/* Scroll bars */
+
+.table-scroll .scroll-bar:vertical,
+.table-scroll .scroll-bar:horizontal {
+
+    -fx-background-color: transparent;
+}
+
+/* Thumb */
+
+.table-scroll .thumb {
+
+    -fx-background-color: #4caf50;
+
+    -fx-background-radius: 10;
+}
+
+/* Track */
+
+.table-scroll .track {
+
+    -fx-background-color: #edf5ed;
+
+    -fx-background-radius: 10;
+}
+
+
+
+//------------------------------------------------------------------------
+
+/* =========================
+   ANIMAL FORM - UI ISOLÉ
+   ========================= */
+
+.sf-animal-form {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 20;
+}
+
+/* TITRE FORM */
+.sf-animal-form-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* RADIO BUTTONS GROUP */
+.sf-animal-radio-box {
+    -fx-spacing: 10;
+}
+
+/* RADIO BUTTON STYLE (isolé uniquement animal form) */
+.sf-animal-radio-box .radio-button {
+    -fx-padding: 6 10;
+    -fx-background-color: #f5f7fa;
+    -fx-background-radius: 8;
+}
+
+/* SELECTED RADIO */
+.sf-animal-radio-box .radio-button:selected {
+    -fx-background-color: #dce9ff;
+}
+
+/* BUTTON VALIDATE */
+.sf-animal-form-button {
+    -fx-background-color: #2d6cdf;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+}
+
+.sf-animal-form-button:hover {
+    -fx-background-color: #2457b3;
+}
+
+//--------------------------------------------------------------------
+
+/* =========================
+   CULTURE LIST CARD WIDGET
+========================= */
+
+.culture-list-card {
+    -fx-background-color: #f4f7f2;
+    -fx-padding: 20;
+    -fx-spacing: 15;
+    -fx-background-radius: 12;
+    -fx-border-color: #dfe8df;
+    -fx-border-radius: 12;
+}
+
+/* zone title */
+.culture-zone-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2e7d32;
+}
+
+/* culture item block */
+.culture-item {
+    -fx-background-color: #1f2f1f;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+}
+
+/* culture text */
+.culture-text {
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+}
+
+/* separator */
+.culture-separator {
+    -fx-background-color: #4caf50;
+    -fx-opacity: 0.4;
+}
+
+//-----------------------------------------------------
+/* =========================
+   ANIMATED TITLE (LIGHT GREEN THEME)
+========================= */
+
+.animated-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+
+    /* plus de noir → vert très clair doux */
+    -fx-text-fill: linear-gradient(to right, #2e7d32, #66bb6a);
+
+    -fx-padding: 10 15;
+
+    /* fond clair moderne (pas noir) */
+    -fx-background-color: linear-gradient(to right, #e8f5e9, #f1f8e9);
+
+    -fx-background-radius: 12;
+
+    /* ombre légère verte */
+    -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.25), 15, 0.2, 0, 4);
+}
+
+/* hover léger (optionnel mais joli) */
+.animated-title:hover {
+    -fx-background-color: linear-gradient(to right, #dcedc8, #e8f5e9);
+    -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.4), 20, 0.3, 0, 6);
+}
+
+/* animation fade-in */
+@keyframes fadeIn {
+    from {
+        -fx-opacity: 0;
+        -fx-translate-y: -10;
+    }
+    to {
+        -fx-opacity: 1;
+        -fx-translate-y: 0;
+    }
+}
+
+.animated-title-anim {
+    -fx-opacity: 0;
+}
+
+//------------------------------------------------------------------------------
+
+
+/* =========================================================
+   GRAPH CARD
+========================================================= */
+
+.farm-graph-card {
+
+    -fx-background-color: linear-gradient(
+            to bottom right,
+            #ffffff,
+            #f4fff5
+    );
+
+    -fx-background-radius: 22;
+
+    -fx-border-radius: 22;
+
+    -fx-border-color: #d9ead7;
+
+    -fx-border-width: 1.5;
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(0,0,0,0.10),
+            18,
+            0.15,
+            0,
+            6
+    );
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.farm-graph-title {
+
+    -fx-font-size: 22px;
+
+    -fx-font-weight: bold;
+
+    -fx-text-fill: #355E3B;
+}
+
+/* =========================================================
+   CHART
+========================================================= */
+
+.farm-bar-chart {
+
+    -fx-background-color: transparent;
+}
+
+/* chart background */
+
+.chart-plot-background {
+
+    -fx-background-color: transparent;
+}
+
+/* grid */
+
+.chart-horizontal-grid-lines,
+.chart-vertical-grid-lines {
+
+    -fx-stroke: rgba(90,130,90,0.10);
+}
+
+/* axis */
+
+.axis {
+
+    -fx-tick-label-fill: #4E8B61;
+
+    -fx-font-size: 13px;
+}
+
+/* =========================================================
+   BAR STYLE
+========================================================= */
+
+.farm-bar {
+
+    -fx-background-color:
+            linear-gradient(
+                    to top,
+                    #4E8B61,
+                    #7ED957
+            );
+
+    -fx-background-radius: 12 12 0 0;
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(78,139,97,0.45),
+            12,
+            0.25,
+            0,
+            4
+    );
+}
+
+.farm-bar:hover {
+
+    -fx-background-color:
+            linear-gradient(
+                    to top,
+                    #5FA86F,
+                    #99F07A
+            );
+}
+
+/* =========================================================
+   VALUE LABEL
+========================================================= */
+
+.farm-bar-value {
+
+    -fx-font-size: 13px;
+
+    -fx-font-weight: bold;
+
+    -fx-text-fill: #2F5233;
+
+    -fx-background-color: rgba(255,255,255,0.85);
+
+    -fx-background-radius: 10;
+
+    -fx-padding: 3 7 3 7;
+}
+
+//------------------------------------------------------
+

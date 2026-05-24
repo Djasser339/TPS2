@@ -22,6 +22,8 @@ abstract class Culture {
     private int teneurAzote;
     private List<HistoriqueProd> historique = new ArrayList<>();
 
+    static int Nbr;
+
     public Culture(FamilleCulture famille, LocalDate datePlantation, LocalDate dateRecolte,
                    Seuil exigencePH, Seuil exigenceHumidite) {
         this.famille = famille;
@@ -29,7 +31,11 @@ abstract class Culture {
         this.dateRecolte = dateRecolte;
         this.exigencePH = exigencePH;
         this.exigenceHumidite = exigenceHumidite;
+        this.stadeCroissance=StadeCroissance.semis;
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
 
     public abstract String getTypeCulture();
 
@@ -81,11 +87,15 @@ abstract class Culture {
 
 class Cereal extends Culture {
     private List<String> cultures = new ArrayList<>();
+    static int Nbr;
 
     public Cereal(FamilleCulture famille, LocalDate datePlantation, LocalDate dateRecolte,
                   Seuil exigencePH, Seuil exigenceHumidite) {
         super(famille, datePlantation, dateRecolte, exigencePH, exigenceHumidite);
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
 
     @Override
     public String getTypeCulture() { return "Céréale"; }
@@ -97,11 +107,15 @@ class Cereal extends Culture {
 
 class Legume extends Culture {
     private List<String> cultures = new ArrayList<>();
+    static int Nbr;
 
     public Legume(FamilleCulture famille, LocalDate datePlantation, LocalDate dateRecolte,
                   Seuil exigencePH, Seuil exigenceHumidite) {
         super(famille, datePlantation, dateRecolte, exigencePH, exigenceHumidite);
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
 
     @Override
     public String getTypeCulture() { return "Légume"; }
@@ -113,11 +127,15 @@ class Legume extends Culture {
 
 class Fruit extends Culture {
     private List<String> cultures = new ArrayList<>();
+    static int Nbr;
 
     public Fruit(FamilleCulture famille, LocalDate datePlantation, LocalDate dateRecolte,
                  Seuil exigencePH, Seuil exigenceHumidite) {
         super(famille, datePlantation, dateRecolte, exigencePH, exigenceHumidite);
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
 
     @Override
     public String getTypeCulture() { return "Fruit"; }

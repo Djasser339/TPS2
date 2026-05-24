@@ -3,6 +3,8 @@ package Smart_Farm;
 
 // ==================== ZONE (ABSTRACT) ====================
 
+import javafx.beans.property.DoubleProperty;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -102,15 +104,23 @@ class ZoneCulture extends Zone {
     private List<Culture> cultures = new ArrayList<>();
     private List<CapteurSol> capteurSols = new ArrayList<>();
     private List<CapteurEnvironnemental> capteurEnvironnementals = new ArrayList<>();
+    private static int Nbr;
+
 
 
     public ZoneCulture(int code, String nom, TypeZone type) {
         super(code, nom, type);
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
+
 
     public void ajouterCulture(Culture c) { cultures.add(c); }
     public void supprimerCulture(Culture c) { cultures.remove(c); }
     public List<Culture> getCultures() { return Collections.unmodifiableList(cultures); }
+
+    public int getNbrCultures() { return Nbr; }
 
     public void ajoutterCapteurSol(CapteurSol c) {
         capteurSols.add(c);
@@ -143,12 +153,17 @@ class ZoneElevage extends Zone {
     private GeographicalLimits limitZone;
     private List<ProgAlimentation> programme = new ArrayList<>();
     private TypeZoneElevage typeZoneElevage;
+    private static int Nbr;
 
     public ZoneElevage(int code, String nom, TypeZone type, TypeZoneElevage typeElevage, GeographicalLimits limitZone) {
         super(code, nom, type);
         this.typeZoneElevage = typeElevage;
         this.limitZone = limitZone;
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
+
 
     public void ajouterRuminant(Ruminant a) { animals.add(a); }
     public void ajouterVollaile(Volaille a) { animals.add(a); }
@@ -157,9 +172,10 @@ class ZoneElevage extends Zone {
     public void ajouterProgAlimentation(ProgAlimentation p) { programme.add(p); }
 
     public List<Animal> getAnimals() { return Collections.unmodifiableList(animals); }
-    public List<ProgAlimentation> getProgramme() { return Collections.unmodifiableList(programme); }
+    public List<ProgAlimentation> getProgramme() { return programme; }
     public GeographicalLimits getLimitZone() { return limitZone; }
     public TypeZoneElevage getTypeZoneElevage() { return typeZoneElevage; }
+    public void setProgramme(List<ProgAlimentation> programme){ this.programme = Collections.unmodifiableList(programme); }
 
     @Override
     public int getNbrEntite() { return animals.size(); }
@@ -179,10 +195,16 @@ class ZoneAquacole extends Zone {
     private List<Aquacole> aquacoles = new ArrayList<>();
     private List<ProgAlimentation> programme = new ArrayList<>();
     private List<CapteurEau> capteurEau = new ArrayList<>();
+    private static int Nbr;
+
 
     public ZoneAquacole(int code, String nom, TypeZone type) {
         super(code, nom, type);
+        Nbr++;
     }
+
+    public static int getNbr() { return Nbr; }
+
 
     public void ajouterAquacole(Aquacole a) { aquacoles.add(a); }
     public void supprimerAquacole(Aquacole a) { aquacoles.remove(a); }
@@ -200,7 +222,8 @@ class ZoneAquacole extends Zone {
 
 
     public List<Aquacole> getAquacoles() { return Collections.unmodifiableList(aquacoles); }
-    public List<ProgAlimentation> getProgramme() { return Collections.unmodifiableList(programme); }
+    public List<ProgAlimentation> getProgramme() { return programme; }
+    public void setProgramme(List<ProgAlimentation> programme){ this.programme = Collections.unmodifiableList(programme); }
 
     public String afficherProgAlimentation(){
         StringBuilder res = new StringBuilder();
