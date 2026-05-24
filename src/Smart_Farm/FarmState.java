@@ -714,10 +714,116 @@ class ZoneState {
 
 }
 
-class CapteurState{
+class CapteurState {
 
+    private static final List<Capteur> capteurs = new ArrayList<>();
+
+    private static final IntegerProperty nbrCapteurs    = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrActifs      = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrSuspendus   = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrDefaillants = new SimpleIntegerProperty(0);
+
+    private static Runnable capteurRefresh;
+
+    public static void setCapteurRefresh(Runnable r) { capteurRefresh = r; }
+    public static void refreshCapteurs() { if (capteurRefresh != null) capteurRefresh.run(); }
+
+    public static IntegerProperty nbrCapteursProperty()    { return nbrCapteurs; }
+    public static IntegerProperty nbrActifsProperty()      { return nbrActifs; }
+    public static IntegerProperty nbrSuspendusProp()       { return nbrSuspendus; }
+    public static IntegerProperty nbrDefaillantsProperty() { return nbrDefaillants; }
+
+    public static List<Capteur> getCapteurs() { return capteurs; }
+
+    public static void addCapteur(Capteur c) {
+        capteurs.add(c);
+        GestionnaireCapteursAlertes.getInstance().ajouterCapteur(c);
+        updateStats();
+        refreshCapteurs();
+    }
+
+    public static void updateStats() {
+        nbrCapteurs.set(capteurs.size());
+        nbrActifs.set((int) capteurs.stream()
+                .filter(c -> c.getStatut() == StatutCapteur.ACTIVE).count());
+        nbrSuspendus.set((int) capteurs.stream()
+                .filter(c -> c.getStatut() == StatutCapteur.SUSPENDU).count());
+        nbrDefaillants.set((int) capteurs.stream()
+                .filter(c -> c.getStatut() == StatutCapteur.INACTIVE).count());
+    }
+
+    public static List<Capteur> searchCapteur(String query) {
+        if (query == null || query.isEmpty()) return capteurs;
+        String q = query.toLowerCase();
+        return capteurs.stream()
+                .filter(c -> c.getId().toLowerCase().contains(q)
+                        || c.getTypeNom().toLowerCase().contains(q)
+                        || c.getZoneId().toLowerCase().contains(q)
+                        || c.getStatut().name().toLowerCase().contains(q))
+                .collect(Collectors.toList());
+    }
+
+    public static List<String> mapCapteur(Capteur c) {
+        List<Releve> hist = c.getHistoriqueReleves();
+        String dernierReleve = hist.isEmpty() ? "—" : hist.get(hist.size() - 1).getValeurAsString();
+        String niveau = hist.isEmpty() ? "—" : hist.get(hist.size() - 1).getNiveau().name();
+        return List.of(
+                c.getId(),
+                c.getTypeNom(),
+                c.getZoneId(),
+                c.getStatut().name(),
+                dernierReleve,
+                niveau
+        );
+    }
 }
 
-class AlerteState{
+class AlerteState {
 
+    private static final IntegerProperty nbrAlertes        = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrCritiques      = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrAvertissements = new SimpleIntegerProperty(0);
+
+    private static Runnable alerteRefresh;
+
+    public static void setAlerteRefresh(Runnable r) { alerteRefresh = r; }
+    public static void refreshAlertes() { if (alerteRefresh != null) alerteRefresh.run(); }
+
+    public static IntegerProperty nbrAlertesProperty()        { return nbrAlertes; }
+    public static IntegerProperty nbrCritiquesProperty()      { return nbrCritiques; }
+    public static IntegerProperty nbrAvertissementsProperty() { return nbrAvertissements; }
+
+    public static List<Alerte> getAlertesActives() {
+        return GestionnaireCapteursAlertes.getInstance()
+                .filtrerAlertes(null, null, null, null, null)
+                .stream()
+                .filter(a -> !a.isAcquittee() && !a.isSupprimee())
+                .sorted((a1, a2) -> a2.getNiveau().compareTo(a1.getNiveau()))
+                .collect(Collectors.toList());
+    }
+
+    public static void updateStats() {
+        List<Alerte> actives = getAlertesActives();
+        nbrAlertes.set(actives.size());
+        nbrCritiques.set((int) actives.stream()
+                .filter(a -> a.getNiveau() == Gravite.critique).count());
+        nbrAvertissements.set((int) actives.stream()
+                .filter(a -> a.getNiveau() == Gravite.avertissement).count());
+    }
+
+    public static List<String> mapAlerte(Alerte a) {
+        GestionnaireCapteursAlertes g = GestionnaireCapteursAlertes.getInstance();
+        Capteur c = g.getCapteurById(a.getReleve().getIdCapteur());
+        String zone = (c != null) ? c.getZoneId() : "?";
+        String type = (c != null) ? c.getTypeNom() : "?";
+        return List.of(
+                String.valueOf(a.getId()),
+                zone,
+                type,
+                a.getNiveau().name(),
+                a.getDateCreation().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                a.getReleve().getValeurAsString(),
+                a.isAcquittee() ? "Acquittée" : "Active"
+        );
+    }
 }

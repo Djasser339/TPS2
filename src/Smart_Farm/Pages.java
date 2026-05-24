@@ -27,27 +27,13 @@ public class Pages {
 
     }
 
-    public static StackPane capteurPage() {
+    public static ScrollPane capteurPage() {
 
-        StackPane pane = new StackPane();
-
-        Label label = new Label("PAGE CAPTEURS");
-
-        pane.getChildren().add(label);
-        pane.setAlignment(Pos.CENTER);
-
-        return pane;
+        return PageCapteurs.capteurPage();
     }
 
-    public static StackPane alertPage() {
+    public static ScrollPane alertPage() {
 
-        StackPane pane = new StackPane();
-
-        Label label = new Label("PAGE ALERTES");
-
-        pane.getChildren().add(label);
-        pane.setAlignment(Pos.CENTER);
-
-        return pane;
+        return PageAlertes.alertePage();
     }
 }

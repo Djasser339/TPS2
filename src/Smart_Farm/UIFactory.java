@@ -29,7 +29,7 @@ class UIFactory {
     // =========================================
     // TOP BAR
     // =========================================
-    public static HBox createTopBar(String pageName, String farmName) {
+    public static HBox createTopBar(String pageName, String farmName, javafx.scene.Node bellNode) {
 
         HBox topBar = new HBox();
         topBar.setPadding(new Insets(15));
@@ -57,7 +57,8 @@ class UIFactory {
                 pageLabel,
                 spacer,
                 dateLabel,
-                farmLabel
+                farmLabel,
+                bellNode
         );
 
         return topBar;
@@ -66,7 +67,7 @@ class UIFactory {
     // =========================================
     // NAV BAR
     // =========================================
-    public static VBox createNavBar(BorderPane root) {
+    public static VBox createNavBar(BorderPane root, javafx.scene.Node bellNode) {
 
         VBox navBar = new VBox();
         navBar.setPadding(new Insets(20));
@@ -92,7 +93,8 @@ class UIFactory {
             root.setCenter(Pages.zonePage());
             root.setTop(createTopBar(
                     "Gestion des Zones",
-                    "Smart Farm"
+                    "Smart Farm",
+                    bellNode
             ));
         });
 
@@ -100,7 +102,8 @@ class UIFactory {
             root.setCenter(Pages.culturePage());
             root.setTop(createTopBar(
                     "Gestion des Cultures",
-                    "Smart Farm"
+                    "Smart Farm",
+                    bellNode
             ));
         });
 
@@ -108,7 +111,8 @@ class UIFactory {
             root.setCenter(Pages.animalPage());
             root.setTop(createTopBar(
                     "Gestion des Animaux",
-                    "Smart Farm"
+                    "Smart Farm",
+                    bellNode
             ));
         });
 
@@ -116,7 +120,8 @@ class UIFactory {
             root.setCenter(Pages.capteurPage());
             root.setTop(createTopBar(
                     "Gestion des Capteurs",
-                    "Smart Farm"
+                    "Smart Farm",
+                    bellNode
             ));
         });
 
@@ -124,7 +129,8 @@ class UIFactory {
             root.setCenter(Pages.alertPage());
             root.setTop(createTopBar(
                     "Gestion des Alertes",
-                    "Smart Farm"
+                    "Smart Farm",
+                    bellNode
             ));
         });
 

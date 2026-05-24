@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Get-ChildItem 'C:/Users/Djasser/.jdks/openjdk-25.0.2/bin/' | Select-Object -First 5; & 'C:/Users/Djasser/.jdks/openjdk-25.0.2/bin/java.exe' -version 2>&1\")"
+    ]
+  }
+}
