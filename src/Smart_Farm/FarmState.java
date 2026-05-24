@@ -721,3 +721,6 @@ class CapteurState{
 class AlerteState{
 
 }
+class SaveState{
+
+}
