@@ -87,6 +87,12 @@ public class SmartFarmApp extends Application {
         root.setLeft(UIFactory.createNavBar(root, bellContainer));
 
         // =========================
+        // SAMPLE DATA (demo)
+        // set SampleData.ENABLED = false to use only real data
+        // =========================
+        SampleData.load();
+
+        // =========================
         // SCENE
         // =========================
         Scene scene = new Scene(root);

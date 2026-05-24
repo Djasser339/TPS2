@@ -86,55 +86,59 @@ class UIFactory {
         Button alertBtn = createNavButton("🚨 Alertes");
 
         // =================================
+        // ACTIVE STATE TRACKING
+        // =================================
+        List<Button> navBtns = List.of(zoneBtn, cultureBtn, animalBtn, capteurBtn, alertBtn);
+        Consumer<Button> activate = btn -> {
+            navBtns.forEach(b -> b.getStyleClass().remove("nav-button-active"));
+            btn.getStyleClass().add("nav-button-active");
+        };
+
+        // =================================
         // ACTIONS
         // =================================
 
         zoneBtn.setOnAction(e -> {
+            activate.accept(zoneBtn);
             root.setCenter(Pages.zonePage());
-            root.setTop(createTopBar(
-                    "Gestion des Zones",
-                    "Smart Farm",
-                    bellNode
-            ));
+            root.setTop(createTopBar("Gestion des Zones", "Smart Farm", bellNode));
         });
 
         cultureBtn.setOnAction(e -> {
+            activate.accept(cultureBtn);
             root.setCenter(Pages.culturePage());
-            root.setTop(createTopBar(
-                    "Gestion des Cultures",
-                    "Smart Farm",
-                    bellNode
-            ));
+            root.setTop(createTopBar("Gestion des Cultures", "Smart Farm", bellNode));
         });
 
         animalBtn.setOnAction(e -> {
+            activate.accept(animalBtn);
             root.setCenter(Pages.animalPage());
-            root.setTop(createTopBar(
-                    "Gestion des Animaux",
-                    "Smart Farm",
-                    bellNode
-            ));
+            root.setTop(createTopBar("Gestion des Animaux", "Smart Farm", bellNode));
         });
 
         capteurBtn.setOnAction(e -> {
+            activate.accept(capteurBtn);
             root.setCenter(Pages.capteurPage());
-            root.setTop(createTopBar(
-                    "Gestion des Capteurs",
-                    "Smart Farm",
-                    bellNode
-            ));
+            root.setTop(createTopBar("Gestion des Capteurs", "Smart Farm", bellNode));
         });
 
         alertBtn.setOnAction(e -> {
+            activate.accept(alertBtn);
             root.setCenter(Pages.alertPage());
-            root.setTop(createTopBar(
-                    "Gestion des Alertes",
-                    "Smart Farm",
-                    bellNode
-            ));
+            root.setTop(createTopBar("Gestion des Alertes", "Smart Farm", bellNode));
         });
 
+        // Zones is the default page — mark it active immediately
+        zoneBtn.getStyleClass().add("nav-button-active");
+
+        // =================================
+        // SECTION HEADER
+        // =================================
+        Label navSection = new Label("NAVIGATION");
+        navSection.getStyleClass().add("nav-section-label");
+
         navBar.getChildren().addAll(
+                navSection,
                 zoneBtn,
                 cultureBtn,
                 animalBtn,
