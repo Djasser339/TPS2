@@ -1,25 +1,19 @@
-package Smart_Farm;
+﻿package Smart_Farm;
 
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.chart.BarChart;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.net.URL;
 import java.util.*;
 
 public class PageAnimaux {
@@ -167,103 +161,98 @@ public class PageAnimaux {
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Ajouter Animal");
 
-        GridPane root = new GridPane();
-        root.setPadding(new Insets(25));
-        root.setHgap(15);
-        root.setVgap(15);
-        root.setAlignment(Pos.CENTER);
+        // ---- Header ----
+        HBox header = new HBox();
+        header.setPadding(new Insets(18, 25, 18, 25));
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("form-header");
+        Label headerLbl = new Label("🐄  Ajouter un Animal");
+        headerLbl.getStyleClass().add("form-header-title");
+        header.getChildren().add(headerLbl);
 
-        // =========================
-        // CSS GLOBAL UNIQUEMENT
-        // =========================
-        root.getStyleClass().add("form-global");
+        // ---- Grid ----
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(22, 25, 22, 25));
+        grid.setHgap(15);
+        grid.setVgap(14);
+        ColumnConstraints c0 = new ColumnConstraints(130);
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        c1.setFillWidth(true);
+        grid.getColumnConstraints().addAll(c0, c1);
 
-        // =========================
         // TYPE ANIMAL
-        // =========================
         Label typeLabel = new Label("Type Animal");
+        typeLabel.getStyleClass().add("form-label");
 
-        RadioButton ruminantBtn = new RadioButton("Ruminant");
-        RadioButton volailleBtn = new RadioButton("Volaille");
-        RadioButton aquacoleBtn = new RadioButton("Aquacole");
+        RadioButton ruminantBtn = new RadioButton("🐄 Ruminant");
+        RadioButton volailleBtn = new RadioButton("🐔 Volaille");
+        RadioButton aquacoleBtn = new RadioButton("🐟 Aquacole");
 
         ToggleGroup group = new ToggleGroup();
         ruminantBtn.setToggleGroup(group);
         volailleBtn.setToggleGroup(group);
         aquacoleBtn.setToggleGroup(group);
-
         ruminantBtn.setSelected(true);
 
-        VBox typeBox = new VBox(10, ruminantBtn, volailleBtn, aquacoleBtn);
+        HBox typeBox = new HBox(14, ruminantBtn, volailleBtn, aquacoleBtn);
+        typeBox.setAlignment(Pos.CENTER_LEFT);
 
-        // =========================
         // NOM
-        // =========================
         Label nameLabel = new Label("Nom");
+        nameLabel.getStyleClass().add("form-label");
         TextField nameField = new TextField();
+        nameField.setPromptText("Nom de l'animal");
+        nameField.setMaxWidth(Double.MAX_VALUE);
 
-        // =========================
         // AGE / POIDS
-        // =========================
+        Label ageLabel = new Label("Âge (ans)");
+        ageLabel.getStyleClass().add("form-label");
         Spinner<Integer> ageSpinner = new Spinner<>(0, 50, 1);
+        ageSpinner.setEditable(true);
+        ageSpinner.setMaxWidth(Double.MAX_VALUE);
+
+        Label poidsLabel = new Label("Poids (kg)");
+        poidsLabel.getStyleClass().add("form-label");
         Spinner<Integer> poidsSpinner = new Spinner<>(0, 500, 10);
+        poidsSpinner.setEditable(true);
+        poidsSpinner.setMaxWidth(Double.MAX_VALUE);
 
-        // =========================
-        // BUTTON
-        // =========================
-        Button validateBtn = new Button("Valider");
-
+        Button validateBtn = new Button("✔  Valider");
         validateBtn.getStyleClass().add("form-button");
+        validateBtn.setMaxWidth(Double.MAX_VALUE);
 
         validateBtn.setOnAction(e -> {
-
             String name = nameField.getText();
             if (name == null || name.isEmpty()) return;
 
             Animal a;
-
             if (ruminantBtn.isSelected()) {
                 a = new Ruminant(TypeEspece.ruminant, name);
-            }
-            else if (volailleBtn.isSelected()) {
+            } else if (volailleBtn.isSelected()) {
                 a = new Volaille(TypeEspece.volaille, name);
-            }
-            else {
+            } else {
                 a = new Aquacole(TypeEspece.aqua, name);
             }
 
             a.setAge(ageSpinner.getValue());
             a.setPoid(poidsSpinner.getValue());
-
             AnimalState.addAnimal(a);
-
             result[0] = a;
             stage.close();
         });
 
-        // =========================
-        // LAYOUT (IDENTIQUE À TON ORIGINAL)
-        // =========================
-        root.add(typeLabel, 0, 0);
-        root.add(typeBox, 1, 0);
+        grid.add(typeLabel,   0, 0); grid.add(typeBox,      1, 0);
+        grid.add(nameLabel,   0, 1); grid.add(nameField,    1, 1);
+        grid.add(ageLabel,    0, 2); grid.add(ageSpinner,   1, 2);
+        grid.add(poidsLabel,  0, 3); grid.add(poidsSpinner, 1, 3);
+        grid.add(validateBtn, 1, 4);
 
-        root.add(nameLabel, 0, 1);
-        root.add(nameField, 1, 1);
+        VBox root = new VBox(header, grid);
+        root.getStyleClass().add("form-global");
 
-        root.add(new Label("Age"), 0, 2);
-        root.add(ageSpinner, 1, 2);
-
-        root.add(new Label("Poids"), 0, 3);
-        root.add(poidsSpinner, 1, 3);
-
-        root.add(validateBtn, 1, 4);
-
-        Scene scene = new Scene(root, 500, 400);
-
-        scene.getStylesheets().add(
-                PageZone.class.getResource("style.css").toExternalForm()
-        );
-
+        Scene scene = new Scene(root, 480, 360);
+        scene.getStylesheets().add(PageZone.class.getResource("style.css").toExternalForm());
         stage.setScene(scene);
         stage.showAndWait();
 

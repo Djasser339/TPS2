@@ -340,86 +340,74 @@ public class PageZone {
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Ajouter Zone");
 
-        GridPane root = new GridPane();
+        // ---- Header ----
+        HBox header = new HBox();
+        header.setPadding(new Insets(18, 25, 18, 25));
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("form-header");
+        Label headerLbl = new Label("Ajouter une Zone");
+        headerLbl.getStyleClass().add("form-header-title");
+        header.getChildren().add(headerLbl);
 
-        root.setPadding(new Insets(25));
-        root.setHgap(15);
-        root.setVgap(15);
-        root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("form-global");
+        // ---- Grid ----
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(22, 25, 22, 25));
+        grid.setHgap(15);
+        grid.setVgap(14);
+        ColumnConstraints c0 = new ColumnConstraints(130);
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        c1.setFillWidth(true);
+        grid.getColumnConstraints().addAll(c0, c1);
 
-        // =========================
         // NOM ZONE
-        // =========================
         Label nameLabel = new Label("Nom Zone");
+        nameLabel.getStyleClass().add("form-label");
         TextField nameField = new TextField();
+        nameField.setPromptText("Ex: Zone Nord");
+        nameField.setMaxWidth(Double.MAX_VALUE);
 
-        // =========================
         // TYPE ZONE
-        // =========================
         Label typeLabel = new Label("Type Zone");
+        typeLabel.getStyleClass().add("form-label");
 
         RadioButton cultureBtn = new RadioButton("Culture");
-        RadioButton elevageBtn = new RadioButton("Élevage");
-        RadioButton aquaBtn = new RadioButton("Aquacole");
+        RadioButton elevageBtn = new RadioButton("Elevage");
+        RadioButton aquaBtn    = new RadioButton("Aquacole");
 
         ToggleGroup group = new ToggleGroup();
         cultureBtn.setToggleGroup(group);
         elevageBtn.setToggleGroup(group);
         aquaBtn.setToggleGroup(group);
-
         cultureBtn.setSelected(true);
 
-        // ✔ horizontal
-        HBox typeBox = new HBox(15, cultureBtn, elevageBtn, aquaBtn);
+        HBox typeBox = new HBox(14, cultureBtn, elevageBtn, aquaBtn);
+        typeBox.setAlignment(Pos.CENTER_LEFT);
 
-        // =========================
         // DYNAMIC AREA
-        // =========================
         VBox dynamicBox = new VBox(15);
 
         Runnable updateUI = () -> {
-
             dynamicBox.getChildren().clear();
 
-            // =====================================================
-            // CULTURE
-            // =====================================================
             if (cultureBtn.isSelected()) {
-
                 Button ok = UIFactory.createActionButton("Valider", () -> {
-
                     String name = nameField.getText();
                     if (name == null || name.isEmpty()) return;
-
-                    ZoneCulture z = new ZoneCulture(
-                            name.hashCode(),
-                            name,
-                            TypeZone.culture
-                    );
-
+                    ZoneCulture z = new ZoneCulture(name.hashCode(), name, TypeZone.culture);
                     ZoneState.addZone(z);
                     result[0] = z;
                     stage.close();
                 });
-
+                ok.setMaxWidth(Double.MAX_VALUE);
                 dynamicBox.getChildren().add(ok);
             }
 
-            // =====================================================
-            // ÉLEVAGE
-            // =====================================================
             else if (elevageBtn.isSelected()) {
-
-                // =========================
-                // TYPE ELEVAGE
-                // =========================
                 ComboBox<TypeZoneElevage> typeElevage = new ComboBox<>();
                 typeElevage.getItems().addAll(TypeZoneElevage.values());
+                typeElevage.setMaxWidth(Double.MAX_VALUE);
 
-                // =========================
-                // GEO LIMITS VISUAL
-                // =========================
                 SimpleDoubleProperty latMinProp = new SimpleDoubleProperty(-45);
                 SimpleDoubleProperty latMaxProp = new SimpleDoubleProperty(45);
                 SimpleDoubleProperty lonMinProp = new SimpleDoubleProperty(-90);
@@ -428,108 +416,67 @@ public class PageZone {
                 Pane geoPane = createGeoLimitsPane(latMinProp, latMaxProp, lonMinProp, lonMaxProp);
 
                 Label coordLabel = new Label();
-                coordLabel.textProperty().bind(Bindings.createStringBinding(
-                        () -> String.format(
-                                "Lat [%d°, %d°]   ·   Lon [%d°, %d°]",
+                coordLabel.textProperty().bind(javafx.beans.binding.Bindings.createStringBinding(
+                        () -> String.format("Lat [%d, %d]   Lon [%d, %d]",
                                 (int) latMinProp.get(), (int) latMaxProp.get(),
                                 (int) lonMinProp.get(), (int) lonMaxProp.get()),
                         latMinProp, latMaxProp, lonMinProp, lonMaxProp));
-                coordLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2E5E3B; -fx-font-size: 13px;");
+                coordLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #3B7249; -fx-font-size: 13px;");
 
-                // =========================
-                // VALIDATION
-                // =========================
                 Button ok = UIFactory.createActionButton("Valider", () -> {
-
                     String name = nameField.getText();
                     if (name == null || name.isEmpty()) return;
-
                     GeographicalLimits limits = new GeographicalLimits(
                             "Zone Elevage",
-                            latMinProp.get(),
-                            latMaxProp.get(),
-                            lonMinProp.get(),
-                            lonMaxProp.get()
-                    );
-
+                            latMinProp.get(), latMaxProp.get(),
+                            lonMinProp.get(), lonMaxProp.get());
                     ZoneElevage z = new ZoneElevage(
-                            name.hashCode(),
-                            name,
-                            TypeZone.elevage,
-                            typeElevage.getValue(),
-                            limits
-                    );
-
+                            name.hashCode(), name, TypeZone.elevage,
+                            typeElevage.getValue(), limits);
                     ZoneState.addZone(z);
                     result[0] = z;
                     stage.close();
                 });
+                ok.setMaxWidth(Double.MAX_VALUE);
 
-                Label hint = new Label("Glisser les bords verts pour délimiter la zone :");
+                Label hint = new Label("Glisser les bords verts pour delimiter la zone :");
                 hint.setStyle("-fx-text-fill: #555555; -fx-font-size: 12px;");
 
-                VBox elevageBox = new VBox(10,
-                        new Label("Type Élevage"),
-                        typeElevage,
-                        hint,
-                        geoPane,
-                        coordLabel,
-                        ok
-                );
+                Label elevTypeLabel = new Label("Type Elevage");
+                elevTypeLabel.getStyleClass().add("form-label");
 
+                VBox elevageBox = new VBox(10, elevTypeLabel, typeElevage, hint, geoPane, coordLabel, ok);
                 dynamicBox.getChildren().add(elevageBox);
             }
 
-            // =====================================================
-            // AQUACOLE
-            // =====================================================
             else if (aquaBtn.isSelected()) {
-
                 Button ok = UIFactory.createActionButton("Valider", () -> {
-
                     String name = nameField.getText();
                     if (name == null || name.isEmpty()) return;
-
-                    ZoneAquacole z = new ZoneAquacole(
-                            name.hashCode(),
-                            name,
-                            TypeZone.aquacole
-                    );
-
+                    ZoneAquacole z = new ZoneAquacole(name.hashCode(), name, TypeZone.aquacole);
                     ZoneState.addZone(z);
                     result[0] = z;
                     stage.close();
                 });
-
+                ok.setMaxWidth(Double.MAX_VALUE);
                 dynamicBox.getChildren().add(ok);
             }
         };
 
-        // =========================
-        // LISTENERS
-        // =========================
         cultureBtn.setOnAction(e -> updateUI.run());
         elevageBtn.setOnAction(e -> updateUI.run());
         aquaBtn.setOnAction(e -> updateUI.run());
-
         updateUI.run();
 
-        // =========================
-        // LAYOUT
-        // =========================
-        root.add(nameLabel, 0, 0);
-        root.add(nameField, 1, 0);
+        grid.add(nameLabel,  0, 0); grid.add(nameField, 1, 0);
+        grid.add(typeLabel,  0, 1); grid.add(typeBox,   1, 1);
+        grid.add(dynamicBox, 1, 2);
 
-        root.add(typeLabel, 0, 1);
-        root.add(typeBox, 1, 1);
+        VBox root = new VBox(header, grid);
+        root.getStyleClass().add("form-global");
 
-        root.add(dynamicBox, 1, 2);
-
-        Scene scene = new Scene(root, 680, 620);
-        scene.getStylesheets().add(
-                PageZone.class.getResource("style.css").toExternalForm()
-        );
-
+        Scene scene = new Scene(root, 680, 640);
+        scene.getStylesheets().add(PageZone.class.getResource("style.css").toExternalForm());
         stage.setScene(scene);
         stage.setResizable(false);
         stage.showAndWait();

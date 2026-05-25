@@ -1,4 +1,4 @@
-package Smart_Farm;
+﻿package Smart_Farm;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -273,47 +273,71 @@ public class PageCapteurs {
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Ajouter Capteur");
 
-        GridPane root = new GridPane();
-        root.setPadding(new Insets(25));
-        root.setHgap(15);
-        root.setVgap(15);
-        root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("form-global");
+        // ---- Header ----
+        HBox header = new HBox();
+        header.setPadding(new Insets(18, 25, 18, 25));
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("form-header");
+        Label headerLbl = new Label("📡  Ajouter un Capteur");
+        headerLbl.getStyleClass().add("form-header-title");
+        header.getChildren().add(headerLbl);
+
+        // ---- Grid ----
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(22, 25, 22, 25));
+        grid.setHgap(15);
+        grid.setVgap(14);
+        ColumnConstraints c0 = new ColumnConstraints(130);
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        c1.setFillWidth(true);
+        grid.getColumnConstraints().addAll(c0, c1);
 
         // ID
         Label idLabel = new Label("ID Capteur");
+        idLabel.getStyleClass().add("form-label");
         TextField idField = new TextField();
         idField.setPromptText("Ex: TEMP-001");
+        idField.setMaxWidth(Double.MAX_VALUE);
 
         // ZONE
-        Label zoneLabel = new Label("Zone ID");
+        Label zoneLabel = new Label("Zone");
+        zoneLabel.getStyleClass().add("form-label");
         ComboBox<String> zoneCombo = new ComboBox<>();
         ZoneState.getZones().forEach(z -> zoneCombo.getItems().add(z.getNom()));
         zoneCombo.setEditable(true);
         zoneCombo.setPromptText("Ex: ZONE-A");
+        zoneCombo.setMaxWidth(Double.MAX_VALUE);
 
         // TYPE CAPTEUR
         Label typeLabel = new Label("Type Capteur");
+        typeLabel.getStyleClass().add("form-label");
         ComboBox<String> typeCombo = new ComboBox<>();
         typeCombo.getItems().addAll("Environnemental", "Sol", "Eau", "Biométrique", "GPS");
         typeCombo.setValue("Environnemental");
+        typeCombo.setMaxWidth(Double.MAX_VALUE);
 
         // TYPE MESURE
         Label mesureLabel = new Label("Type Mesure");
+        mesureLabel.getStyleClass().add("form-label");
         ComboBox<TypeMesure> mesureCombo = new ComboBox<>();
         mesureCombo.getItems().addAll(TypeMesure.TEMPERATURE, TypeMesure.HUMIDITE, TypeMesure.PLUVIOMETRIE);
         mesureCombo.setValue(TypeMesure.TEMPERATURE);
+        mesureCombo.setMaxWidth(Double.MAX_VALUE);
 
         // SEUILS
         Label seuilMinLabel = new Label("Seuil Min");
+        seuilMinLabel.getStyleClass().add("form-label");
         Spinner<Double> seuilMin = new Spinner<>(0.0, 9999.0, 10.0, 1.0);
         seuilMin.setEditable(true);
+        seuilMin.setMaxWidth(Double.MAX_VALUE);
 
         Label seuilMaxLabel = new Label("Seuil Max");
+        seuilMaxLabel.getStyleClass().add("form-label");
         Spinner<Double> seuilMax = new Spinner<>(0.0, 9999.0, 40.0, 1.0);
         seuilMax.setEditable(true);
+        seuilMax.setMaxWidth(Double.MAX_VALUE);
 
-        // Update mesure choices when type changes
         typeCombo.setOnAction(e -> {
             mesureCombo.getItems().clear();
             boolean notNumeric = false;
@@ -334,8 +358,9 @@ public class PageCapteurs {
                 mesureCombo.setValue(mesureCombo.getItems().get(0));
         });
 
-        Button validateBtn = new Button("Valider");
+        Button validateBtn = new Button("✔  Valider");
         validateBtn.getStyleClass().add("form-button");
+        validateBtn.setMaxWidth(Double.MAX_VALUE);
 
         validateBtn.setOnAction(e -> {
             String id   = idField.getText().trim();
@@ -375,15 +400,18 @@ public class PageCapteurs {
             }
         });
 
-        root.add(idLabel,       0, 0); root.add(idField,       1, 0);
-        root.add(zoneLabel,     0, 1); root.add(zoneCombo,     1, 1);
-        root.add(typeLabel,     0, 2); root.add(typeCombo,     1, 2);
-        root.add(mesureLabel,   0, 3); root.add(mesureCombo,   1, 3);
-        root.add(seuilMinLabel, 0, 4); root.add(seuilMin,      1, 4);
-        root.add(seuilMaxLabel, 0, 5); root.add(seuilMax,      1, 5);
-        root.add(validateBtn,   1, 6);
+        grid.add(idLabel,       0, 0); grid.add(idField,    1, 0);
+        grid.add(zoneLabel,     0, 1); grid.add(zoneCombo,  1, 1);
+        grid.add(typeLabel,     0, 2); grid.add(typeCombo,  1, 2);
+        grid.add(mesureLabel,   0, 3); grid.add(mesureCombo,1, 3);
+        grid.add(seuilMinLabel, 0, 4); grid.add(seuilMin,   1, 4);
+        grid.add(seuilMaxLabel, 0, 5); grid.add(seuilMax,   1, 5);
+        grid.add(validateBtn,   1, 6);
 
-        Scene scene = new Scene(root, 500, 460);
+        VBox root = new VBox(header, grid);
+        root.getStyleClass().add("form-global");
+
+        Scene scene = new Scene(root, 480, 470);
         scene.getStylesheets().add(PageZone.class.getResource("style.css").toExternalForm());
         stage.setScene(scene);
         stage.setResizable(false);

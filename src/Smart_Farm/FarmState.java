@@ -1,4 +1,4 @@
-package Smart_Farm;
+﻿package Smart_Farm;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
@@ -767,11 +767,16 @@ class CapteurState {
         List<Releve> hist = c.getHistoriqueReleves();
         String dernierReleve = hist.isEmpty() ? "—" : hist.get(hist.size() - 1).getValeurAsString();
         String niveau = hist.isEmpty() ? "—" : hist.get(hist.size() - 1).getNiveau().name();
+        String statut = switch (c.getStatut()) {
+            case ACTIVE   -> "Actif";
+            case SUSPENDU -> "Suspendu";
+            case INACTIVE -> "Défaillant";
+        };
         return List.of(
                 c.getId(),
                 c.getTypeNom(),
                 c.getZoneId(),
-                c.getStatut().name(),
+                statut,
                 dernierReleve,
                 niveau
         );
