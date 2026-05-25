@@ -1,14 +1,14 @@
-package Smart_Farm;
+﻿package Smart_Farm;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.stage.Modality;
@@ -34,41 +34,35 @@ public class PageZone {
 
 
         // =========================
-        // STATS
+        // STATS + ADD  (une seule ligne coh\u00E9rente)
         // =========================
-        center.getChildren().add(zoneStatsCards());
-
-        // =========================
-        // ACTION CARD
-        // =========================
-        center.getChildren().add(
-                UIFactory.createAnimatedTitle("\uD83C\uDF0D Ajouter une zone")
+        HBox statsHeader = new HBox(20);
+        statsHeader.setPadding(new Insets(20));
+        statsHeader.setAlignment(Pos.CENTER);
+        statsHeader.getChildren().addAll(
+                UIFactory.createLiveNumberDisplay("Zone Culture",  ZoneState.nbrZoneCultureProperty(),  220, 90),
+                UIFactory.createLiveNumberDisplay("Zone Elevage",  ZoneState.nbrZoneElevageProperty(),  220, 90),
+                UIFactory.createLiveNumberDisplay("Zone Aquacole", ZoneState.nbrZoneAquacoleProperty(), 220, 90),
+                UIFactory.createAddCard("Total", ZoneState.nbrZonesProperty(), "\u2795 Ajouter Zone", () -> showAddZoneForm(), 220, 90)
         );
-
-        center.getChildren().add(
-                zoneActionCard(
-                        ZoneState.nbrZonesProperty(),
-                        () -> showAddZoneForm(),
-                        700,
-                        100
-                )
-        );
+        UIFactory.expandToFill(statsHeader);
+        center.getChildren().add(statsHeader);
 
         // =========================
-        // DOUBLE ACTION CARD
+        // AFFECTATION CARDS
         // =========================
         center.getChildren().add(
-                UIFactory.createAnimatedTitle("\uD83C\uDF04 Affecter une culture ou un animal a une zone")
+                UIFactory.createAnimatedTitle("\uD83C\uDF04 Affecter une culture ou un animal \u00E0 une zone")
         );
 
         center.getChildren().add(
                 createDoubleActionCard(
                         "Nbr Cultures",
                         FarmState.nbrCulturesProperty(),
-                        "Nbr animaux",
+                        "Nbr Animaux",
                         AnimalState.nbrAnimalsProperty(),
-                        300,
-                        200
+                        700,
+                        110
                 )
         );
 
@@ -223,143 +217,88 @@ public class PageZone {
             double width,
             double height
     ) {
+        HBox container = new HBox(20);
+        container.setAlignment(Pos.CENTER);
+        container.setPadding(new Insets(0));
 
-        HBox card = new HBox();
-        card.setSpacing(20);
-        card.setPadding(new Insets(15));
-        card.setAlignment(Pos.CENTER);
+        // ---- Card 1: Cultures ----
+        VBox card1 = new VBox(8);
+        card1.setAlignment(Pos.CENTER);
+        card1.setPadding(new Insets(22, 40, 22, 40));
+        card1.getStyleClass().add("widget-card");
+        HBox.setHgrow(card1, Priority.ALWAYS);
 
-        card.getStyleClass().add("widget-card");
+        Label icon1 = new Label("🌱");
+        icon1.setStyle("-fx-font-size: 28px;");
 
-        card.setPrefSize(width, height);
+        Label lbl1 = new Label(title1);
+        lbl1.setStyle("-fx-font-size: 11px; -fx-text-fill: #888888; -fx-font-weight: bold;");
 
-        VBox block1 = new VBox();
-        block1.setAlignment(Pos.CENTER);
+        Label val1 = new Label();
+        val1.textProperty().bind(value1.asString());
+        val1.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2E5E3B;");
 
-        Label label1 = new Label(title1+ " : " +value1.get());
-        label1.getStyleClass().add("top-title");
+        Button btn1 = createActionButton("🏷️ Affecter Culture", () -> {});
+        btn1.setMaxWidth(Double.MAX_VALUE);
+        btn1.setOnAction(e -> showAssignToZoneForm(
+                "Affecter Culture",
+                List.of("Type", "Croissance", "Cultivation", "Recolte", "Ph", "Humidité"),
+                FarmState::searchCultureByType,
+                FarmState::mapCulture,
+                (zone, culture) -> {
+                    if (!(zone instanceof ZoneCulture zc))
+                        throw new IllegalArgumentException("Cette zone n'accepte pas les cultures");
+                    zc.ajouterCulture((Culture) culture);
+                },
+                () -> {}
+        ));
 
+        card1.getChildren().addAll(icon1, lbl1, val1, btn1);
 
-        Button btn1 = createActionButton("\uD83C\uDFF7\uFE0F Affecter Culture", () -> {
-            System.out.println("Action 1");
-        });
+        // ---- Card 2: Animaux ----
+        VBox card2 = new VBox(8);
+        card2.setAlignment(Pos.CENTER);
+        card2.setPadding(new Insets(22, 40, 22, 40));
+        card2.getStyleClass().add("widget-card");
+        HBox.setHgrow(card2, Priority.ALWAYS);
 
-        btn1.setOnAction(e -> {
+        Label icon2 = new Label("🐄");
+        icon2.setStyle("-fx-font-size: 28px;");
 
-            showAssignToZoneForm(
+        Label lbl2 = new Label(title2);
+        lbl2.setStyle("-fx-font-size: 11px; -fx-text-fill: #888888; -fx-font-weight: bold;");
 
-                    "Affecter Culture",
+        Label val2 = new Label();
+        val2.textProperty().bind(value2.asString());
+        val2.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2E5E3B;");
 
-                    List.of(
-                            "Type",
-                            "Croissance",
-                            "Cultivation",
-                            "Recolte",
-                            "Ph",
-                            "Humidité"
-                    ),
+        Button btn2 = createActionButton("🏷️ Affecter Animal", () -> {});
+        btn2.setMaxWidth(Double.MAX_VALUE);
+        btn2.setOnAction(e -> showAssignToZoneForm(
+                "Affecter Animal",
+                List.of("ID", "Nom", "Type", "Age", "Poids"),
+                AnimalState::searchAnimal,
+                AnimalState::mapAnimal,
+                (zone, animalObj) -> {
+                    Animal animal = (Animal) animalObj;
+                    if (animal instanceof Aquacole aqua) {
+                        if (!(zone instanceof ZoneAquacole za))
+                            throw new IllegalArgumentException("Un animal aquacole doit être dans une zone aquacole");
+                        za.ajouterAquacole(aqua);
+                        return;
+                    }
+                    if (!(zone instanceof ZoneElevage ze))
+                        throw new IllegalArgumentException("Cet animal doit être dans une zone d'élevage");
+                    if (animal instanceof Ruminant r) ze.ajouterRuminant(r);
+                    else if (animal instanceof Volaille v) ze.ajouterVollaile(v);
+                },
+                () -> {}
+        ));
 
-                    FarmState::searchCultureByType,
+        card2.getChildren().addAll(icon2, lbl2, val2, btn2);
 
-                    FarmState::mapCulture,
-
-                    (zone, culture) -> {
-
-                        if (!(zone instanceof ZoneCulture zc)) {
-
-                            throw new IllegalArgumentException(
-                                    "Cette zone n'accepte pas les cultures"
-                            );
-                        }
-
-                        zc.ajouterCulture((Culture) culture);
-                    },
-
-                    () -> {}
-            );
-        });
-
-        block1.getChildren().addAll(label1,  btn1);
-
-        VBox block2 = new VBox();
-        block2.setAlignment(Pos.CENTER);
-
-        Label label2 = new Label(title2+" : " +value2.get());
-        label2.getStyleClass().add("top-title");
-
-
-
-        Button btn2 = createActionButton("\uD83C\uDFF7\uFE0F Affecter Animal", () -> {
-            System.out.println("Action 2");
-        });
-
-        btn2.setOnAction(e -> {
-
-            showAssignToZoneForm(
-
-                    "Affecter Animal",
-
-                    List.of(
-                            "ID",
-                            "Nom",
-                            "Type",
-                            "Age",
-                            "Poids"
-                    ),
-
-                    AnimalState::searchAnimal,
-
-                    AnimalState::mapAnimal,
-
-                    (zone, animalObj) -> {
-
-                        Animal animal = (Animal) animalObj;
-
-                        // =========================
-                        // AQUACOLE
-                        // =========================
-                        if (animal instanceof Aquacole aqua) {
-
-                            if (!(zone instanceof ZoneAquacole za)) {
-
-                                throw new IllegalArgumentException(
-                                        "Un animal aquacole doit être dans une zone aquacole"
-                                );
-                            }
-
-                            za.ajouterAquacole(aqua);
-
-                            return;
-                        }
-
-                        // =========================
-                        // ELEVAGE
-                        // =========================
-                        if (!(zone instanceof ZoneElevage ze)) {
-
-                            throw new IllegalArgumentException(
-                                    "Cet animal doit être dans une zone d'élevage"
-                            );
-                        }
-
-                        if (animal instanceof Ruminant r) {
-                            ze.ajouterRuminant(r);
-                        }
-
-                        else if (animal instanceof Volaille v) {
-                            ze.ajouterVollaile(v);
-                        }
-                    },
-
-                    () -> {}
-            );
-        });
-
-        block2.getChildren().addAll(label2,  btn2);
-
-        card.getChildren().addAll(block1, block2);
-
-        return card;
+        container.getChildren().addAll(card1, card2);
+        return container;
     }
 
     public static HBox zoneActionCard(
@@ -479,64 +418,23 @@ public class PageZone {
                 typeElevage.getItems().addAll(TypeZoneElevage.values());
 
                 // =========================
-                // LATITUDE RANGE
+                // GEO LIMITS VISUAL
                 // =========================
-                Slider latMin = new Slider(-90, 90, -10);
-                Slider latMax = new Slider(-90, 90, 10);
+                SimpleDoubleProperty latMinProp = new SimpleDoubleProperty(-45);
+                SimpleDoubleProperty latMaxProp = new SimpleDoubleProperty(45);
+                SimpleDoubleProperty lonMinProp = new SimpleDoubleProperty(-90);
+                SimpleDoubleProperty lonMaxProp = new SimpleDoubleProperty(90);
 
-                Label latLabel = new Label();
+                Pane geoPane = createGeoLimitsPane(latMinProp, latMaxProp, lonMinProp, lonMaxProp);
 
-                latLabel.textProperty().bind(
-                        Bindings.createStringBinding(
-                                () -> "Latitude : [" +
-                                        (int) latMin.getValue() + " , " +
-                                        (int) latMax.getValue() + "]",
-                                latMin.valueProperty(),
-                                latMax.valueProperty()
-                        )
-                );
-
-                latMin.valueProperty().addListener((o, oldV, newV) -> {
-                    if (newV.doubleValue() > latMax.getValue()) {
-                        latMax.setValue(newV.doubleValue());
-                    }
-                });
-
-                latMax.valueProperty().addListener((o, oldV, newV) -> {
-                    if (newV.doubleValue() < latMin.getValue()) {
-                        latMin.setValue(newV.doubleValue());
-                    }
-                });
-
-                // =========================
-                // LONGITUDE RANGE
-                // =========================
-                Slider lonMin = new Slider(-180, 180, -10);
-                Slider lonMax = new Slider(-180, 180, 10);
-
-                Label lonLabel = new Label();
-
-                lonLabel.textProperty().bind(
-                        Bindings.createStringBinding(
-                                () -> "Longitude : [" +
-                                        (int) lonMin.getValue() + " , " +
-                                        (int) lonMax.getValue() + "]",
-                                lonMin.valueProperty(),
-                                lonMax.valueProperty()
-                        )
-                );
-
-                lonMin.valueProperty().addListener((o, oldV, newV) -> {
-                    if (newV.doubleValue() > lonMax.getValue()) {
-                        lonMax.setValue(newV.doubleValue());
-                    }
-                });
-
-                lonMax.valueProperty().addListener((o, oldV, newV) -> {
-                    if (newV.doubleValue() < lonMin.getValue()) {
-                        lonMin.setValue(newV.doubleValue());
-                    }
-                });
+                Label coordLabel = new Label();
+                coordLabel.textProperty().bind(Bindings.createStringBinding(
+                        () -> String.format(
+                                "Lat [%d°, %d°]   ·   Lon [%d°, %d°]",
+                                (int) latMinProp.get(), (int) latMaxProp.get(),
+                                (int) lonMinProp.get(), (int) lonMaxProp.get()),
+                        latMinProp, latMaxProp, lonMinProp, lonMaxProp));
+                coordLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #2E5E3B; -fx-font-size: 13px;");
 
                 // =========================
                 // VALIDATION
@@ -548,10 +446,10 @@ public class PageZone {
 
                     GeographicalLimits limits = new GeographicalLimits(
                             "Zone Elevage",
-                            (int) latMin.getValue(),
-                            (int) latMax.getValue(),
-                            (int) lonMin.getValue(),
-                            (int) lonMax.getValue()
+                            latMinProp.get(),
+                            latMaxProp.get(),
+                            lonMinProp.get(),
+                            lonMaxProp.get()
                     );
 
                     ZoneElevage z = new ZoneElevage(
@@ -567,15 +465,15 @@ public class PageZone {
                     stage.close();
                 });
 
+                Label hint = new Label("Glisser les bords verts pour délimiter la zone :");
+                hint.setStyle("-fx-text-fill: #555555; -fx-font-size: 12px;");
+
                 VBox elevageBox = new VBox(10,
                         new Label("Type Élevage"),
                         typeElevage,
-                        latLabel,
-                        latMin,
-                        latMax,
-                        lonLabel,
-                        lonMin,
-                        lonMax,
+                        hint,
+                        geoPane,
+                        coordLabel,
                         ok
                 );
 
@@ -627,16 +525,172 @@ public class PageZone {
 
         root.add(dynamicBox, 1, 2);
 
-        Scene scene = new Scene(root, 650, 450);
+        Scene scene = new Scene(root, 680, 620);
         scene.getStylesheets().add(
                 PageZone.class.getResource("style.css").toExternalForm()
         );
 
         stage.setScene(scene);
-        stage.showAndWait();
         stage.setResizable(false);
+        stage.showAndWait();
 
         return result[0];
+    }
+
+    // =========================================
+    // GEO LIMITS VISUAL PANE
+    // =========================================
+    private static Pane createGeoLimitsPane(
+            SimpleDoubleProperty latMin,
+            SimpleDoubleProperty latMax,
+            SimpleDoubleProperty lonMin,
+            SimpleDoubleProperty lonMax
+    ) {
+        final double W = 520;
+        final double H = 270;
+        final double HANDLE = 10;
+
+        Pane pane = new Pane();
+        pane.setPrefSize(W, H);
+        pane.setMinSize(W, H);
+        pane.setMaxSize(W, H);
+        pane.setStyle(
+            "-fx-background-color: #e8f5e9;" +
+            "-fx-border-color: #3D7A4E;" +
+            "-fx-border-width: 1.5;" +
+            "-fx-border-radius: 8;" +
+            "-fx-background-radius: 8;"
+        );
+
+        // Grid lines
+        for (int lon = -180; lon <= 180; lon += 45) {
+            double x = (lon + 180) / 360.0 * W;
+            Line v = new Line(x, 0, x, H);
+            v.setStroke(Color.color(0.3, 0.55, 0.3, 0.22));
+            v.setStrokeWidth(1);
+            pane.getChildren().add(v);
+            Label lbl = new Label(lon + "°");
+            lbl.setStyle("-fx-font-size: 9px; -fx-text-fill: #6a9a6a;");
+            lbl.setLayoutX(x + 2); lbl.setLayoutY(H - 14);
+            pane.getChildren().add(lbl);
+        }
+        for (int lat = -90; lat <= 90; lat += 30) {
+            double y = (90 - lat) / 180.0 * H;
+            Line h = new Line(0, y, W, y);
+            h.setStroke(Color.color(0.3, 0.55, 0.3, 0.22));
+            h.setStrokeWidth(1);
+            pane.getChildren().add(h);
+            Label lbl = new Label(lat + "°");
+            lbl.setStyle("-fx-font-size: 9px; -fx-text-fill: #6a9a6a;");
+            lbl.setLayoutX(2); lbl.setLayoutY(y - 12);
+            pane.getChildren().add(lbl);
+        }
+
+        // Zone fill
+        Rectangle zone = new Rectangle();
+        zone.setFill(Color.color(0.18, 0.47, 0.18, 0.28));
+        zone.setStroke(Color.web("#2E5E3B"));
+        zone.setStrokeWidth(2.5);
+        pane.getChildren().add(zone);
+
+        // Edge drag handles
+        Rectangle topH    = new Rectangle();
+        Rectangle bottomH = new Rectangle();
+        Rectangle leftH   = new Rectangle();
+        Rectangle rightH  = new Rectangle();
+
+        Color handleColor = Color.color(0.18, 0.47, 0.18, 0.75);
+        topH.setFill(handleColor);    topH.setArcWidth(4);    topH.setArcHeight(4);
+        bottomH.setFill(handleColor); bottomH.setArcWidth(4); bottomH.setArcHeight(4);
+        leftH.setFill(handleColor);   leftH.setArcWidth(4);   leftH.setArcHeight(4);
+        rightH.setFill(handleColor);  rightH.setArcWidth(4);  rightH.setArcHeight(4);
+
+        topH.setCursor(javafx.scene.Cursor.N_RESIZE);
+        bottomH.setCursor(javafx.scene.Cursor.S_RESIZE);
+        leftH.setCursor(javafx.scene.Cursor.W_RESIZE);
+        rightH.setCursor(javafx.scene.Cursor.E_RESIZE);
+
+        pane.getChildren().addAll(topH, bottomH, leftH, rightH);
+
+        // Value labels on each edge
+        String lblStyle = "-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: white;" +
+                          "-fx-background-color: #2E5E3B; -fx-padding: 2 6;" +
+                          "-fx-background-radius: 4;";
+        Label lblN = new Label(); lblN.setStyle(lblStyle);
+        Label lblS = new Label(); lblS.setStyle(lblStyle);
+        Label lblW = new Label(); lblW.setStyle(lblStyle);
+        Label lblE = new Label(); lblE.setStyle(lblStyle);
+        pane.getChildren().addAll(lblN, lblS, lblW, lblE);
+
+        // Layout updater
+        Runnable update = () -> {
+            double x1 = Math.max(0,      Math.min(W, (lonMin.get() + 180) / 360.0 * W));
+            double x2 = Math.max(x1 + 16, Math.min(W, (lonMax.get() + 180) / 360.0 * W));
+            double y1 = Math.max(0,      Math.min(H, (90 - latMax.get()) / 180.0 * H));
+            double y2 = Math.max(y1 + 16, Math.min(H, (90 - latMin.get()) / 180.0 * H));
+
+            zone.setX(x1); zone.setY(y1);
+            zone.setWidth(x2 - x1); zone.setHeight(y2 - y1);
+
+            topH.setX(x1);           topH.setY(y1 - HANDLE / 2); topH.setWidth(x2 - x1); topH.setHeight(HANDLE);
+            bottomH.setX(x1);        bottomH.setY(y2 - HANDLE / 2); bottomH.setWidth(x2 - x1); bottomH.setHeight(HANDLE);
+            leftH.setX(x1 - HANDLE / 2); leftH.setY(y1); leftH.setWidth(HANDLE); leftH.setHeight(y2 - y1);
+            rightH.setX(x2 - HANDLE / 2); rightH.setY(y1); rightH.setWidth(HANDLE); rightH.setHeight(y2 - y1);
+
+            double cx = (x1 + x2) / 2;
+            double cy = (y1 + y2) / 2;
+            lblN.setText(String.format("N %d°", (int) latMax.get()));
+            lblS.setText(String.format("S %d°", (int) latMin.get()));
+            lblW.setText(String.format("W %d°", (int) lonMin.get()));
+            lblE.setText(String.format("E %d°", (int) lonMax.get()));
+            lblN.setLayoutX(cx - 22); lblN.setLayoutY(y1 + 2);
+            lblS.setLayoutX(cx - 22); lblS.setLayoutY(y2 - 20);
+            lblW.setLayoutX(x1 + 3);  lblW.setLayoutY(cy - 10);
+            lblE.setLayoutX(x2 - 50); lblE.setLayoutY(cy - 10);
+        };
+
+        latMin.addListener((o, v, n) -> update.run());
+        latMax.addListener((o, v, n) -> update.run());
+        lonMin.addListener((o, v, n) -> update.run());
+        lonMax.addListener((o, v, n) -> update.run());
+
+        // Drag logic
+        double[] drag = {0};
+
+        topH.setOnMousePressed(e -> drag[0] = e.getSceneY());
+        topH.setOnMouseDragged(e -> {
+            double dy = e.getSceneY() - drag[0]; drag[0] = e.getSceneY();
+            double newY = (90 - latMax.get()) / 180.0 * H + dy;
+            newY = Math.max(0, Math.min((90 - latMin.get()) / 180.0 * H - 16, newY));
+            latMax.set(90 - newY / H * 180);
+        });
+
+        bottomH.setOnMousePressed(e -> drag[0] = e.getSceneY());
+        bottomH.setOnMouseDragged(e -> {
+            double dy = e.getSceneY() - drag[0]; drag[0] = e.getSceneY();
+            double newY = (90 - latMin.get()) / 180.0 * H + dy;
+            newY = Math.max((90 - latMax.get()) / 180.0 * H + 16, Math.min(H, newY));
+            latMin.set(90 - newY / H * 180);
+        });
+
+        leftH.setOnMousePressed(e -> drag[0] = e.getSceneX());
+        leftH.setOnMouseDragged(e -> {
+            double dx = e.getSceneX() - drag[0]; drag[0] = e.getSceneX();
+            double newX = (lonMin.get() + 180) / 360.0 * W + dx;
+            newX = Math.max(0, Math.min((lonMax.get() + 180) / 360.0 * W - 16, newX));
+            lonMin.set(newX / W * 360 - 180);
+        });
+
+        rightH.setOnMousePressed(e -> drag[0] = e.getSceneX());
+        rightH.setOnMouseDragged(e -> {
+            double dx = e.getSceneX() - drag[0]; drag[0] = e.getSceneX();
+            double newX = (lonMax.get() + 180) / 360.0 * W + dx;
+            newX = Math.max((lonMin.get() + 180) / 360.0 * W + 16, Math.min(W, newX));
+            lonMax.set(newX / W * 360 - 180);
+        });
+
+        update.run();
+        return pane;
     }
 
     public static void showZoneEditForm(Zone z) {

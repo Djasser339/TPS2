@@ -351,6 +351,51 @@ class UIFactory {
         return card;
     }
 
+    public static void expandToFill(HBox row) {
+        row.getChildren().forEach(n -> {
+            HBox.setHgrow(n, Priority.ALWAYS);
+            if (n instanceof Region r) r.setMaxWidth(Double.MAX_VALUE);
+        });
+    }
+
+    public static HBox createAddCard(
+            String title,
+            IntegerProperty value,
+            String buttonText,
+            Runnable action,
+            double width,
+            double height
+    ) {
+        HBox card = new HBox();
+        card.setSpacing(8);
+        card.setPadding(new Insets(12));
+        card.setAlignment(Pos.CENTER);
+        card.getStyleClass().add("widget-card");
+        card.setPrefSize(width, height);
+        card.setMinSize(width, height);
+        card.setMaxSize(width, height);
+
+        Label titleLabel = new Label(title + " : ");
+        titleLabel.getStyleClass().add("top-title");
+
+        Label valueLabel = new Label();
+        valueLabel.getStyleClass().add("top-date");
+        valueLabel.textProperty().bind(value.asString());
+
+        HBox titleRow = new HBox(5, titleLabel, valueLabel);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+
+        Button btn = new Button(buttonText);
+        btn.getStyleClass().add("primary-button");
+        btn.setOnAction(e -> action.run());
+
+        VBox content = new VBox(8, titleRow, btn);
+        content.setAlignment(Pos.CENTER);
+
+        card.getChildren().add(content);
+        return card;
+    }
+
     public static HBox createAnimatedTitle(String text) {
 
         Label title = new Label(text);

@@ -28,27 +28,25 @@ public class PageCapteurs {
         center.setFillWidth(true);
 
         // =========================
-        // STATS
+        // STATS + ADD  (une seule ligne cohérente)
         // =========================
-        center.getChildren().add(capteurStatsCards());
-
-        // =========================
-        // ACTION CARD
-        // =========================
-        center.getChildren().add(
-                UIFactory.RajoutterCard(
-                        "Capteurs",
-                        CapteurState.nbrCapteursProperty(),
-                        "Ajouter Capteur",
-                        () -> showAddCapteurForm(),
-                        700,
-                        100
-                )
+        HBox statsHeader = new HBox(20);
+        statsHeader.setPadding(new Insets(20));
+        statsHeader.setAlignment(Pos.CENTER);
+        statsHeader.getChildren().addAll(
+                UIFactory.createLiveNumberDisplay("Actifs",      CapteurState.nbrActifsProperty(),      200, 90),
+                UIFactory.createLiveNumberDisplay("Suspendus",   CapteurState.nbrSuspendusProp(),       200, 90),
+                UIFactory.createLiveNumberDisplay("Défaillants", CapteurState.nbrDefaillantsProperty(), 200, 90),
+                UIFactory.createAddCard("Total", CapteurState.nbrCapteursProperty(), "➕ Ajouter Capteur", () -> showAddCapteurForm(), 240, 90)
         );
+        UIFactory.expandToFill(statsHeader);
+        center.getChildren().add(statsHeader);
 
         // =========================
         // TABLE
         // =========================
+        center.getChildren().add(UIFactory.createAnimatedTitle("📡 Liste des Capteurs"));
+
         List<String> headers = List.of("ID", "Type", "Zone", "Statut", "Dernier Relevé", "Niveau");
 
         VBox tableCard = TableFactory.createSearchTableCard(

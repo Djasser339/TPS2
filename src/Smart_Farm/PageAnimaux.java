@@ -37,27 +37,25 @@ public class PageAnimaux {
 
 
         // =========================
-        // STATS
+        // STATS + ADD  (une seule ligne cohérente)
         // =========================
-        center.getChildren().add(animauxStatsCards());
-
-        // =========================
-        // ACTION CARD
-        // =========================
-        center.getChildren().add(
-                UIFactory.RajoutterCard(
-                        "Animaux",
-                        AnimalState.nbrAnimalsProperty(),
-                        "Ajouter Animal",
-                        () -> showAddAnimalForm(),
-                        700,
-                        100
-                )
+        HBox statsHeader = new HBox(20);
+        statsHeader.setPadding(new Insets(20));
+        statsHeader.setAlignment(Pos.CENTER);
+        statsHeader.getChildren().addAll(
+                UIFactory.createLiveNumberDisplay("Ruminants", AnimalState.nbrRuminantsProperty(), 220, 90),
+                UIFactory.createLiveNumberDisplay("Volaille",  AnimalState.nbrVolailleProperty(),  220, 90),
+                UIFactory.createLiveNumberDisplay("Aquacole",  AnimalState.nbrAquacoleProperty(),  220, 90),
+                UIFactory.createAddCard("Total", AnimalState.nbrAnimalsProperty(), "➕ Ajouter Animal", () -> showAddAnimalForm(), 220, 90)
         );
+        UIFactory.expandToFill(statsHeader);
+        center.getChildren().add(statsHeader);
 
         // =========================
         // TABLE
         // =========================
+        center.getChildren().add(UIFactory.createAnimatedTitle("🐄 Liste des Animaux"));
+
         List<String> headers = List.of(
                 "ID",
                 "Nom",
@@ -108,31 +106,6 @@ public class PageAnimaux {
         center.getChildren().add(graphCard);
 
 
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
-        center.getChildren().add(animauxStatsCards());
 
 
         // =========================

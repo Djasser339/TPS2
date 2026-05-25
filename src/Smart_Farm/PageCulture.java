@@ -31,30 +31,25 @@ public class PageCulture {
         center.setFillWidth(true);
 
         // =========================
-        // STATS
+        // STATS + ADD  (une seule ligne cohérente)
         // =========================
-        center.getChildren().add(cultureStatsCards());
-
-        // =========================
-        // ACTION CARD
-        // =========================
-        center.getChildren().add(
-                UIFactory.RajoutterCard(
-                        "Cultures",
-                        FarmState.nbrCulturesProperty(),
-                        "Ajouter Culture",
-                        () -> {
-                            System.out.println("Ajouter Culture");
-                            showAddCultureForm();
-                        },
-                        700,
-                        100
-                )
+        HBox statsHeader = new HBox(20);
+        statsHeader.setPadding(new Insets(20));
+        statsHeader.setAlignment(Pos.CENTER);
+        statsHeader.getChildren().addAll(
+                UIFactory.createLiveNumberDisplay("Céréales", FarmState.nbrCerealProperty(), 220, 90),
+                UIFactory.createLiveNumberDisplay("Légumes",  FarmState.nbrLegumeProperty(), 220, 90),
+                UIFactory.createLiveNumberDisplay("Fruits",   FarmState.nbrFruitProperty(),  220, 90),
+                UIFactory.createAddCard("Total", FarmState.nbrCulturesProperty(), "➕ Ajouter Culture", () -> showAddCultureForm(), 220, 90)
         );
+        UIFactory.expandToFill(statsHeader);
+        center.getChildren().add(statsHeader);
 
         // =========================
         // TABLE
         // =========================
+        center.getChildren().add(UIFactory.createAnimatedTitle("🌱 Liste des Cultures"));
+
         VBox tableCard = TableFactory.createSearchTableCard(
                 List.of("Type", "Croissance", "Cultivation", "Recolte", "Ph", "Humidité"),
                 FarmState::searchCultureByType,
@@ -75,13 +70,6 @@ public class PageCulture {
         center.getChildren().add(
                 createCultureSearchCard(ZoneState.getZones())
         );
-
-        // =========================
-        // TEST CONTENT (tu peux enlever après)
-        // =========================
-        for (int i = 0; i < 10; i++) {
-            center.getChildren().add(cultureStatsCards());
-        }
 
         root.setCenter(center);
 

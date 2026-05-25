@@ -136,8 +136,8 @@ public class FarmState {
                 String.valueOf(c.getStadeCroissance()),
                 String.valueOf(c.getDatePlantation()),
                 String.valueOf(c.getDateRecolte()),
-                String.valueOf(c.getPH()),
-                String.valueOf(c.getHumidite())
+                String.format("%.4f", c.getPH()),
+                String.format("%.4f", c.getHumidite())
 
 
                 );
@@ -616,7 +616,7 @@ class ZoneState {
                 z.getType().toString(),
                 String.valueOf(p.getDate()),
                 description,
-                String.valueOf(p.getQuantite()),
+                String.format("%.4f", p.getQuantite()),
                 unite
         );
     }

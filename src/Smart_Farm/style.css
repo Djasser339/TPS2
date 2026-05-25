@@ -962,3 +962,33 @@ SCROLL
     -fx-cursor: hand;
 }
 
+/* =========================
+   COMBO BOX DROPDOWN HOVER
+========================= */
+
+.combo-box-popup .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #3D7A4E;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0.1, 0, 3);
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #1a2e1a;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #e8f5e9;
+    -fx-text-fill: #2E5E3B;
+    -fx-cursor: hand;
+}
+
+.combo-box-popup .list-view .list-cell:filled:selected,
+.combo-box-popup .list-view .list-cell:filled:selected:hover {
+    -fx-background-color: #3D7A4E;
+    -fx-text-fill: white;
+}
+

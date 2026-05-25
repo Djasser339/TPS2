@@ -33,7 +33,7 @@ class ReleveNumerique extends Releve {
     public double getValeur()         { return valeur; }
     public String getUnite()          { return unite; }
     public TypeMesure getTypeMesure() { return typeMesure; }
-    public String getValeurAsString() { return valeur + " " + unite; }
+    public String getValeurAsString() { return String.format("%.4f %s", valeur, unite); }
 }
 
 class ReleveGPS extends Releve {
