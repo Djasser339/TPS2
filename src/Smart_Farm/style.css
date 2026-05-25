@@ -1011,3 +1011,43 @@ SCROLL
 .form-global {
     -fx-background-color: #f8fbf8;
 }
+
+/* =========================
+   WIDGET CARD — HOVER GLOW
+========================= */
+
+.widget-card:hover {
+    -fx-border-color: #7ED07E;
+    -fx-effect: dropshadow(gaussian, rgba(76,200,100,0.50), 22, 0.35, 0, 5);
+    -fx-cursor: hand;
+}
+
+/* =========================
+   ALERTE HISTORY ITEM (light)
+========================= */
+
+.alerte-history-item {
+    -fx-background-color: #f8fcf8;
+    -fx-background-radius: 10;
+    -fx-border-color: #d8ead8;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+.alerte-history-item:hover {
+    -fx-background-color: #edf7ed;
+    -fx-border-color: #7ED07E;
+    -fx-cursor: hand;
+}
+
+/* =========================
+   ALERTE CHART BARS
+========================= */
+
+.alerte-chart .chart-bar {
+    -fx-background-radius: 8 8 0 0;
+}
+
+.alerte-chart .default-color0.chart-bar { -fx-bar-fill: #c62828; }
+.alerte-chart .default-color1.chart-bar { -fx-bar-fill: #e65100; }
+.alerte-chart .default-color2.chart-bar { -fx-bar-fill: #2e7d32; }

@@ -1,9 +1,11 @@
 ﻿package Smart_Farm;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.PieChart;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
@@ -76,6 +78,12 @@ public class PageAnimaux {
         );
 
         center.getChildren().add(tableCard);
+
+        // =========================
+        // DISTRIBUTION PAR TYPE
+        // =========================
+        center.getChildren().add(UIFactory.createAnimatedTitle("🐾 Distribution des Animaux par Type"));
+        center.getChildren().add(createAnimalDistributionChart());
 
         center.getChildren().add(
                 createAlimentationSearchCard(ZoneState.getZones())
@@ -455,6 +463,52 @@ public class PageAnimaux {
         }
 
         return list;
+    }
+
+    // =========================================
+    // PIE CHART — DISTRIBUTION DES ANIMAUX
+    // =========================================
+    private static VBox createAnimalDistributionChart() {
+
+        VBox card = new VBox(12);
+        card.setPadding(new Insets(20));
+        card.getStyleClass().add("farm-graph-card");
+
+        PieChart chart = new PieChart();
+        chart.setLabelsVisible(true);
+        chart.setLegendVisible(true);
+        chart.setAnimated(false);
+        chart.setPrefHeight(300);
+
+        String[] COLORS = {"#ff6b35", "#4caf50", "#2196f3"};
+
+        Runnable refreshChart = () -> {
+            chart.getData().clear();
+            int ruminants = AnimalState.nbrRuminantsProperty().get();
+            int volailles = AnimalState.nbrVolailleProperty().get();
+            int aquacoles = AnimalState.nbrAquacoleProperty().get();
+            if (ruminants > 0)
+                chart.getData().add(new PieChart.Data("Ruminants (" + ruminants + ")", ruminants));
+            if (volailles > 0)
+                chart.getData().add(new PieChart.Data("Volailles (" + volailles + ")", volailles));
+            if (aquacoles > 0)
+                chart.getData().add(new PieChart.Data("Aquacoles (" + aquacoles + ")", aquacoles));
+            if (chart.getData().isEmpty())
+                chart.getData().add(new PieChart.Data("Aucun animal", 1));
+            Platform.runLater(() -> {
+                for (int i = 0; i < chart.getData().size(); i++) {
+                    PieChart.Data d = chart.getData().get(i);
+                    if (d.getNode() != null)
+                        d.getNode().setStyle("-fx-pie-color: " + COLORS[i % COLORS.length] + ";");
+                }
+            });
+        };
+
+        refreshChart.run();
+        AnimalState.nbrAnimalsProperty().addListener((obs, o, n) -> Platform.runLater(refreshChart));
+
+        card.getChildren().add(chart);
+        return card;
     }
 
     // =========================

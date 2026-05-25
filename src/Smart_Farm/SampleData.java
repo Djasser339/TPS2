@@ -38,6 +38,8 @@ public class SampleData {
                 "SOL-PH-01",   "Zone-Ble", TypeMesure.PH_SOL,      new Seuil(6.2, 7.0)));
 
         // ── Capteurs — Zone-Bovins ─────────────────────────────────────
+        CapteurState.addCapteur(new CapteurEnvironnemental(
+                "ENV-BOV-01", "Zone-Bovins", TypeMesure.TEMPERATURE, new Seuil(15, 28)));
         CapteurState.addCapteur(new CapteurBiometrique(
                 "BIO-BOV-01", "Zone-Bovins", new Seuil(38.2, 39.0), new Seuil(35, 85)));
         CapteurState.addCapteur(new CapteurGPS("GPS-BOV-01", "Zone-Bovins"));

@@ -1,20 +1,35 @@
-﻿package Smart_Farm;
+package Smart_Farm;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PageCapteurs {
+
+    private static final String[] TYPE_NAMES  = {"Environnemental", "Sol", "Eau", "Biométrique", "GPS"};
+    private static final String[] TYPE_COLORS = {"#4CAF50", "#FF9800", "#2196F3", "#9C27B0", "#F44336"};
+
+    private static Runnable evolutionRefreshCallback;
+    public static void notifyEvolutionRefresh() {
+        if (evolutionRefreshCallback != null) evolutionRefreshCallback.run();
+    }
 
     // =========================================
     // PAGE CAPTEURS
@@ -28,7 +43,7 @@ public class PageCapteurs {
         center.setFillWidth(true);
 
         // =========================
-        // STATS + ADD  (une seule ligne cohérente)
+        // STATS + ADD
         // =========================
         HBox statsHeader = new HBox(20);
         statsHeader.setPadding(new Insets(20));
@@ -57,8 +72,13 @@ public class PageCapteurs {
                 refresh -> CapteurState.setCapteurRefresh(() ->
                         refresh.accept(CapteurState.searchCapteur("")))
         );
-
         center.getChildren().add(tableCard);
+
+        // =========================
+        // DONUT CHART — TYPES
+        // =========================
+        center.getChildren().add(UIFactory.createAnimatedTitle("📊 Répartition des Capteurs par Type"));
+        center.getChildren().add(createCapteurTypeDonut());
 
         // =========================
         // DASHBOARD PAR ZONE
@@ -68,7 +88,6 @@ public class PageCapteurs {
         VBox[] dashboardHolder = {createZoneDashboard()};
         center.getChildren().add(dashboardHolder[0]);
 
-        // auto-refresh dashboard every 10s
         Timeline dashboardRefresh = new Timeline(
                 new KeyFrame(Duration.seconds(10), e -> {
                     int idx = center.getChildren().indexOf(dashboardHolder[0]);
@@ -80,9 +99,10 @@ public class PageCapteurs {
         dashboardRefresh.play();
 
         // =========================
-        // GRAPHIQUE ÉVOLUTION
+        // GRAPHIQUES ÉVOLUTION
         // =========================
-        center.getChildren().add(createReleveLineGraph());
+        center.getChildren().add(UIFactory.createAnimatedTitle("📈 Évolution par Zone / Capteur"));
+        center.getChildren().add(createEvolutionSearchCard());
 
         // =========================
         // SCROLL GLOBAL
@@ -107,17 +127,262 @@ public class PageCapteurs {
         container.setAlignment(Pos.CENTER);
 
         container.getChildren().addAll(
-                UIFactory.createLiveNumberDisplay(
-                        "Total Capteurs", CapteurState.nbrCapteursProperty(), 200, 90),
-                UIFactory.createLiveNumberDisplay(
-                        "Actifs", CapteurState.nbrActifsProperty(), 200, 90),
-                UIFactory.createLiveNumberDisplay(
-                        "Suspendus", CapteurState.nbrSuspendusProp(), 200, 90),
-                UIFactory.createLiveNumberDisplay(
-                        "Défaillants", CapteurState.nbrDefaillantsProperty(), 200, 90)
+                UIFactory.createLiveNumberDisplay("Total Capteurs", CapteurState.nbrCapteursProperty(), 200, 90),
+                UIFactory.createLiveNumberDisplay("Actifs",         CapteurState.nbrActifsProperty(),   200, 90),
+                UIFactory.createLiveNumberDisplay("Suspendus",      CapteurState.nbrSuspendusProp(),    200, 90),
+                UIFactory.createLiveNumberDisplay("Défaillants",    CapteurState.nbrDefaillantsProperty(), 200, 90)
         );
 
         return container;
+    }
+
+    // =========================================
+    // DONUT CHART — CAPTEURS PAR TYPE
+    // =========================================
+    private static VBox createCapteurTypeDonut() {
+
+        VBox card = new VBox(15);
+        card.setPadding(new Insets(20));
+        card.setAlignment(Pos.TOP_CENTER);
+        card.getStyleClass().add("farm-graph-card");
+
+        List<Capteur> all = CapteurState.getCapteurs();
+        if (all.isEmpty()) {
+            Label empty = new Label("Aucun capteur — ajoutez des capteurs pour voir les statistiques");
+            empty.getStyleClass().add("culture-text");
+            card.getChildren().add(empty);
+            return card;
+        }
+
+        Map<String, Long> byType = all.stream()
+                .collect(Collectors.groupingBy(Capteur::getTypeNom, Collectors.counting()));
+
+        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
+        List<String> usedColors = new ArrayList<>();
+
+        for (int i = 0; i < TYPE_NAMES.length; i++) {
+            long count = byType.getOrDefault(TYPE_NAMES[i], 0L);
+            if (count > 0) {
+                pieData.add(new PieChart.Data(TYPE_NAMES[i] + "  (" + count + ")", count));
+                usedColors.add(TYPE_COLORS[i]);
+            }
+        }
+
+        PieChart chart = new PieChart(pieData);
+        chart.setLegendVisible(false);
+        chart.setLabelsVisible(true);
+        chart.setAnimated(false);
+        chart.setPrefSize(380, 300);
+
+        // Apply colors after scene renders (nodes are created on layout pass)
+        new Timeline(new KeyFrame(Duration.millis(150), e -> {
+            for (int i = 0; i < chart.getData().size() && i < usedColors.size(); i++) {
+                PieChart.Data d = chart.getData().get(i);
+                if (d.getNode() != null) {
+                    d.getNode().setStyle("-fx-pie-color: " + usedColors.get(i) + ";");
+                }
+            }
+        })).play();
+
+        // Donut hole overlay
+        StackPane donutPane = new StackPane(chart);
+        Circle hole = new Circle(75, Color.web("#f4f4f4"));
+        hole.setMouseTransparent(true);
+        donutPane.getChildren().add(hole);
+
+        // Color legend
+        HBox legend = new HBox(20);
+        legend.setAlignment(Pos.CENTER);
+        for (int i = 0; i < TYPE_NAMES.length; i++) {
+            long count = byType.getOrDefault(TYPE_NAMES[i], 0L);
+            if (count > 0) {
+                Rectangle rect = new Rectangle(14, 14, Color.web(TYPE_COLORS[i]));
+                rect.setArcWidth(4);
+                rect.setArcHeight(4);
+                Label lbl = new Label(TYPE_NAMES[i] + " : " + count);
+                lbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #333;");
+                HBox item = new HBox(6, rect, lbl);
+                item.setAlignment(Pos.CENTER_LEFT);
+                legend.getChildren().add(item);
+            }
+        }
+
+        card.getChildren().addAll(donutPane, legend);
+        return card;
+    }
+
+    // =========================================
+    // ÉVOLUTION PAR ZONE / CAPTEUR
+    // =========================================
+    private static VBox createEvolutionSearchCard() {
+
+        VBox card = new VBox(15);
+        card.setPadding(new Insets(20));
+        card.setAlignment(Pos.TOP_LEFT);
+        card.getStyleClass().add("farm-graph-card");
+
+        // --- Search controls ---
+        Label zoneLabel = new Label("Zone :");
+        zoneLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #3B7249; -fx-font-size: 13px;");
+
+        ComboBox<String> zoneCombo = new ComboBox<>();
+        zoneCombo.setPromptText("Sélectionner une zone (optionnel)");
+        zoneCombo.setEditable(true);
+        zoneCombo.setPrefWidth(240);
+        ZoneState.getZones().forEach(z -> zoneCombo.getItems().add(z.getNom()));
+        zoneCombo.showingProperty().addListener((obs, was, showing) -> {
+            if (showing) {
+                String cur = zoneCombo.getEditor().getText();
+                zoneCombo.getItems().setAll(
+                        ZoneState.getZones().stream().map(z -> z.getNom()).collect(Collectors.toList()));
+                zoneCombo.getEditor().setText(cur);
+            }
+        });
+
+        Label capteurLabel = new Label("Capteur :");
+        capteurLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #3B7249; -fx-font-size: 13px;");
+
+        ComboBox<String> capteurCombo = new ComboBox<>();
+        capteurCombo.setPromptText("Sélectionner un capteur (optionnel)");
+        capteurCombo.setEditable(true);
+        capteurCombo.setPrefWidth(240);
+        CapteurState.getCapteurs().forEach(c -> capteurCombo.getItems().add(c.getId()));
+        capteurCombo.showingProperty().addListener((obs, was, showing) -> {
+            if (showing) {
+                String cur = capteurCombo.getEditor().getText();
+                capteurCombo.getItems().setAll(
+                        CapteurState.getCapteurs().stream().map(c -> c.getId()).collect(Collectors.toList()));
+                capteurCombo.getEditor().setText(cur);
+            }
+        });
+
+        Button showBtn = new Button("  Afficher  ");
+        showBtn.getStyleClass().add("form-button");
+
+        HBox searchRow = new HBox(12, zoneLabel, zoneCombo, capteurLabel, capteurCombo, showBtn);
+        searchRow.setAlignment(Pos.CENTER_LEFT);
+        searchRow.setPadding(new Insets(0, 0, 5, 0));
+
+        // --- Hint ---
+        Label hint = new Label("Sélectionnez une zone et/ou un capteur, puis cliquez Afficher");
+        hint.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
+
+        // --- Zone chart ---
+        CategoryAxis xZ = new CategoryAxis();
+        NumberAxis   yZ = new NumberAxis();
+        yZ.setAutoRanging(true);
+        LineChart<String, Number> zoneChart = new LineChart<>(xZ, yZ);
+        zoneChart.setTitle("Évolution par Zone");
+        zoneChart.setLegendVisible(true);
+        zoneChart.setAnimated(false);
+        zoneChart.setPrefSize(860, 310);
+        zoneChart.getStyleClass().add("farm-bar-chart");
+        zoneChart.setVisible(false);
+        zoneChart.setManaged(false);
+
+        // --- Capteur chart ---
+        CategoryAxis xC = new CategoryAxis();
+        NumberAxis   yC = new NumberAxis();
+        yC.setAutoRanging(true);
+        LineChart<String, Number> capteurChart = new LineChart<>(xC, yC);
+        capteurChart.setTitle("Évolution par Capteur");
+        capteurChart.setLegendVisible(true);
+        capteurChart.setAnimated(false);
+        capteurChart.setPrefSize(860, 310);
+        capteurChart.getStyleClass().add("farm-bar-chart");
+        capteurChart.setVisible(false);
+        capteurChart.setManaged(false);
+
+        Runnable updateCharts = () -> {
+            String zoneName  = zoneCombo.getEditor().getText().trim();
+            String capteurId = capteurCombo.getEditor().getText().trim();
+
+            // only refresh if at least one filter is active
+            if (zoneName.isEmpty() && capteurId.isEmpty()) return;
+
+            zoneChart.getData().clear();
+            capteurChart.getData().clear();
+            hint.setVisible(false);
+            hint.setManaged(false);
+
+            // -- Zone chart --
+            if (!zoneName.isEmpty()) {
+                List<Capteur> inZone = CapteurState.getCapteurs().stream()
+                        .filter(c -> c.getZoneId().equalsIgnoreCase(zoneName))
+                        .collect(Collectors.toList());
+
+                for (Capteur c : inZone) {
+                    XYChart.Series<String, Number> s = new XYChart.Series<>();
+                    s.setName(c.getId() + " (" + c.getTypeNom() + ")");
+                    for (Releve r : c.getHistoriqueReleves()) {
+                        if (r instanceof ReleveNumerique rn) {
+                            s.getData().add(new XYChart.Data<>(
+                                    r.getTimestamp().toLocalTime().toString().substring(0, 8),
+                                    rn.getValeur()));
+                        }
+                    }
+                    if (!s.getData().isEmpty()) zoneChart.getData().add(s);
+                }
+                zoneChart.setTitle("Évolution — Zone : " + zoneName);
+                boolean hasZone = !zoneChart.getData().isEmpty();
+                zoneChart.setVisible(hasZone);
+                zoneChart.setManaged(hasZone);
+            } else {
+                zoneChart.setVisible(false);
+                zoneChart.setManaged(false);
+            }
+
+            // -- Capteur chart --
+            if (!capteurId.isEmpty()) {
+                Optional<Capteur> found = CapteurState.getCapteurs().stream()
+                        .filter(c -> c.getId().equalsIgnoreCase(capteurId))
+                        .findFirst();
+
+                found.ifPresent(c -> {
+                    XYChart.Series<String, Number> s = new XYChart.Series<>();
+                    s.setName(c.getId() + " (" + c.getTypeNom() + ")");
+                    for (Releve r : c.getHistoriqueReleves()) {
+                        if (r instanceof ReleveNumerique rn) {
+                            s.getData().add(new XYChart.Data<>(
+                                    r.getTimestamp().toLocalTime().toString().substring(0, 8),
+                                    rn.getValeur()));
+                        }
+                    }
+                    if (!s.getData().isEmpty()) capteurChart.getData().add(s);
+                });
+
+                capteurChart.setTitle("Évolution — Capteur : " + capteurId);
+                boolean hasCap = !capteurChart.getData().isEmpty();
+                capteurChart.setVisible(hasCap);
+                capteurChart.setManaged(hasCap);
+            } else {
+                capteurChart.setVisible(false);
+                capteurChart.setManaged(false);
+            }
+
+            if (!zoneChart.isVisible() && !capteurChart.isVisible()) {
+                hint.setText("Aucune donnée de relevé disponible pour ce filtre");
+                hint.setVisible(true);
+                hint.setManaged(true);
+            }
+        };
+
+        showBtn.setOnAction(e -> {
+            // first click with empty combos: show hint
+            if (zoneCombo.getEditor().getText().trim().isEmpty()
+                    && capteurCombo.getEditor().getText().trim().isEmpty()) {
+                hint.setText("Sélectionnez une zone et/ou un capteur, puis cliquez Afficher");
+                hint.setVisible(true);
+                hint.setManaged(true);
+                return;
+            }
+            updateCharts.run();
+        });
+
+        evolutionRefreshCallback = updateCharts;
+
+        card.getChildren().addAll(searchRow, hint, zoneChart, capteurChart);
+        return card;
     }
 
     // =========================================
@@ -193,75 +458,6 @@ public class PageCapteurs {
         }
 
         return dashboard;
-    }
-
-    // =========================================
-    // GRAPHIQUE LIGNE (ÉVOLUTION RELEVÉS)
-    // =========================================
-    private static VBox createReleveLineGraph() {
-
-        VBox card = new VBox(15);
-        card.setPadding(new Insets(20));
-        card.setAlignment(Pos.TOP_CENTER);
-        card.setPrefSize(900, 420);
-        card.getStyleClass().add("farm-graph-card");
-
-        Label title = new Label("📈 Évolution des Relevés");
-        title.getStyleClass().add("farm-graph-title");
-
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis();
-        yAxis.setAutoRanging(true);
-        yAxis.setMinorTickVisible(false);
-
-        LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
-        chart.setLegendVisible(true);
-        chart.setAnimated(false);
-        chart.setPrefSize(860, 340);
-        chart.getStyleClass().add("farm-bar-chart");
-
-        refreshLineChart(chart);
-
-        Timeline autoRefresh = new Timeline(
-                new KeyFrame(Duration.seconds(10), e -> refreshLineChart(chart))
-        );
-        autoRefresh.setCycleCount(Timeline.INDEFINITE);
-        autoRefresh.play();
-
-        card.getChildren().addAll(title, chart);
-        return card;
-    }
-
-    private static void refreshLineChart(LineChart<String, Number> chart) {
-
-        chart.getData().clear();
-
-        List<Capteur> capteurs = CapteurState.getCapteurs();
-        int maxShown = Math.min(capteurs.size(), 4);
-
-        for (int i = 0; i < maxShown; i++) {
-
-            Capteur c = capteurs.get(i);
-            if (!(c instanceof CapteurNumerique)) continue;
-
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
-            series.setName(c.getId());
-
-            List<Releve> hist = c.getHistoriqueReleves();
-            int start = Math.max(0, hist.size() - 10);
-
-            for (int j = start; j < hist.size(); j++) {
-                Releve r = hist.get(j);
-                if (r instanceof ReleveNumerique rn) {
-                    String timeLabel = r.getTimestamp().toLocalTime().toString().substring(0, 8);
-                    series.getData().add(new XYChart.Data<>(timeLabel, rn.getValeur()));
-                }
-            }
-
-            if (!series.getData().isEmpty()) {
-                chart.getData().add(series);
-            }
-        }
     }
 
     // =========================================
@@ -419,7 +615,7 @@ public class PageCapteurs {
     }
 
     // =========================================
-    // FORMULAIRE ACTION CAPTEUR
+    // FORMULAIRE ACTION CAPTEUR — clic sur tableau
     // =========================================
     public static void showCapteurActionForm(Capteur capteur) {
 
@@ -432,19 +628,18 @@ public class PageCapteurs {
         root.setAlignment(Pos.CENTER_LEFT);
         root.getStyleClass().add("form-global");
 
-        // TITLE
         Label title = new Label("📡 " + capteur.getId() + "  —  " + capteur.getTypeNom());
         title.getStyleClass().add("form-label");
 
         Label zoneInfo   = new Label("Zone : " + capteur.getZoneId());
         Label statutInfo = new Label("Statut : " + capteur.getStatut().name());
 
-        // CHANGE STATUT
+        // --- Changer statut ---
         Label changeLabel = new Label("Changer Statut :");
 
-        RadioButton actifBtn    = new RadioButton("Actif");
-        RadioButton suspendBtn  = new RadioButton("Suspendu");
-        RadioButton inactifBtn  = new RadioButton("Défaillant");
+        RadioButton actifBtn   = new RadioButton("Actif");
+        RadioButton suspendBtn = new RadioButton("Suspendu");
+        RadioButton inactifBtn = new RadioButton("Défaillant");
 
         ToggleGroup group = new ToggleGroup();
         actifBtn.setToggleGroup(group);
@@ -468,47 +663,67 @@ public class PageCapteurs {
             stage.close();
         });
 
-        // ENVOYER RELEVE
+        // --- Envoyer relevé ---
         Button sendBtn = UIFactory.createActionButton("📤 Envoyer Relevé", () -> {
             capteur.envoyerReleve();
             CapteurState.updateStats();
             AlerteState.updateStats();
             AlerteState.refreshAlertes();
+            notifyEvolutionRefresh();
             stage.close();
         });
 
-        // HISTORIQUE
-        Label histTitle = new Label("Historique (10 derniers relevés) :");
+        // --- Historique ---
+        Label histTitle = new Label("Historique des relevés :");
         histTitle.getStyleClass().add("form-label");
+
+        // Date filter controls
+        DatePicker fromPicker = new DatePicker();
+        fromPicker.setPromptText("Date début");
+        fromPicker.setPrefWidth(148);
+
+        DatePicker toPicker = new DatePicker();
+        toPicker.setPromptText("Date fin");
+        toPicker.setPrefWidth(148);
+
+        Button filterBtn = new Button("Filtrer");
+        filterBtn.getStyleClass().add("form-button");
+
+        Button resetBtn = new Button("Tout afficher");
+        resetBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #3B7249;" +
+                          " -fx-font-size: 11px; -fx-cursor: hand;");
+
+        Label fromLbl = new Label("De :");
+        fromLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
+        Label toLbl = new Label("À :");
+        toLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
+
+        HBox filterRow = new HBox(8, fromLbl, fromPicker, toLbl, toPicker, filterBtn, resetBtn);
+        filterRow.setAlignment(Pos.CENTER_LEFT);
 
         VBox histBox = new VBox(4);
         histBox.setPadding(new Insets(5));
 
-        List<Releve> hist = capteur.getHistoriqueReleves();
-        int start = Math.max(0, hist.size() - 10);
-        for (int i = start; i < hist.size(); i++) {
-            Releve r = hist.get(i);
-            String color = switch (r.getNiveau()) {
-                case critique      -> "#ff5252";
-                case avertissement -> "#ffb300";
-                default            -> "#4caf50";
-            };
-            String time = r.getTimestamp().toLocalTime().toString().substring(0, 8);
-            Label rl = new Label("• " + time + "  →  " + r.getValeurAsString()
-                    + "  [" + r.getNiveau().name() + "]");
-            rl.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 12px;");
-            histBox.getChildren().add(rl);
-        }
-        if (hist.isEmpty()) {
-            Label none = new Label("Aucun relevé enregistré");
-            none.getStyleClass().add("culture-text");
-            histBox.getChildren().add(none);
-        }
-
         ScrollPane histScroll = new ScrollPane(histBox);
         histScroll.setFitToWidth(true);
-        histScroll.setPrefHeight(180);
+        histScroll.setPrefHeight(260);
         histScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        buildHistContent(histBox, capteur.getHistoriqueReleves(), null, null);
+
+        filterBtn.setOnAction(e -> {
+            LocalDateTime from = fromPicker.getValue() != null
+                    ? fromPicker.getValue().atStartOfDay() : null;
+            LocalDateTime to = toPicker.getValue() != null
+                    ? toPicker.getValue().plusDays(1).atStartOfDay() : null;
+            buildHistContent(histBox, capteur.getHistoriqueReleves(), from, to);
+        });
+
+        resetBtn.setOnAction(e -> {
+            fromPicker.setValue(null);
+            toPicker.setValue(null);
+            buildHistContent(histBox, capteur.getHistoriqueReleves(), null, null);
+        });
 
         root.getChildren().addAll(
                 title, zoneInfo, statutInfo,
@@ -517,12 +732,49 @@ public class PageCapteurs {
                 new Separator(),
                 sendBtn,
                 new Separator(),
-                histTitle, histScroll
+                histTitle, filterRow, histScroll
         );
 
-        Scene scene = new Scene(root, 400, 580);
+        Scene scene = new Scene(root, 490, 680);
         scene.getStylesheets().add(PageZone.class.getResource("style.css").toExternalForm());
         stage.setScene(scene);
         stage.showAndWait();
+    }
+
+    // =========================================
+    // HELPER — construction du contenu historique
+    // =========================================
+    private static void buildHistContent(VBox histBox, List<Releve> releves,
+                                         LocalDateTime from, LocalDateTime to) {
+        histBox.getChildren().clear();
+
+        List<Releve> filtered = releves.stream()
+                .filter(r -> (from == null || !r.getTimestamp().isBefore(from))
+                          && (to   == null ||  r.getTimestamp().isBefore(to)))
+                .sorted(Comparator.comparing(Releve::getTimestamp).reversed())
+                .collect(Collectors.toList());
+
+        if (filtered.isEmpty()) {
+            Label none = new Label(from != null || to != null
+                    ? "Aucun relevé pour cette période"
+                    : "Aucun relevé enregistré");
+            none.getStyleClass().add("culture-text");
+            histBox.getChildren().add(none);
+            return;
+        }
+
+        for (Releve r : filtered) {
+            String color = switch (r.getNiveau()) {
+                case critique      -> "#ff5252";
+                case avertissement -> "#ffb300";
+                default            -> "#4caf50";
+            };
+            String time = r.getTimestamp()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            Label rl = new Label("• " + time + "  →  " + r.getValeurAsString()
+                    + "  [" + r.getNiveau().name() + "]");
+            rl.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 12px;");
+            histBox.getChildren().add(rl);
+        }
     }
 }

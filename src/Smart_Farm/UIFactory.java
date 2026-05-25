@@ -23,6 +23,8 @@ import java.util.*;
 
 import java.time.LocalDate;
 import java.util.function.Function;
+import javafx.animation.ScaleTransition;
+import javafx.util.Duration;
 
 class UIFactory {
 
@@ -234,7 +236,7 @@ class UIFactory {
 
         HBox box = new HBox();
         box.setSpacing(10);
-        box.setPadding(new Insets(10));
+        box.setPadding(new Insets(10, 14, 20, 14));
         box.setAlignment(Pos.CENTER_LEFT);
 
         box.getStyleClass().add("widget-card");
@@ -261,6 +263,7 @@ class UIFactory {
 
         box.getChildren().addAll(label, spacer, valueLabel);
 
+        applyHoverEffect(box);
         return box;
     }
 
@@ -275,7 +278,7 @@ class UIFactory {
 
         HBox card = new HBox();
         card.setSpacing(20);
-        card.setPadding(new Insets(15));
+        card.setPadding(new Insets(15, 15, 24, 15));
         card.setAlignment(Pos.CENTER);
         card.getStyleClass().add("widget-card");
 
@@ -297,6 +300,7 @@ class UIFactory {
 
         card.getChildren().add(box);
 
+        applyHoverEffect(card);
         return card;
     }
 
@@ -314,7 +318,7 @@ class UIFactory {
 
         HBox card = new HBox();
         card.setSpacing(20);
-        card.setPadding(new Insets(15));
+        card.setPadding(new Insets(15, 15, 24, 15));
         card.setAlignment(Pos.CENTER);
         card.getStyleClass().add("widget-card");
 
@@ -348,7 +352,23 @@ class UIFactory {
 
         card.getChildren().add(box);
 
+        applyHoverEffect(card);
         return card;
+    }
+
+    public static void applyHoverEffect(Region card) {
+        card.setOnMouseEntered(e -> {
+            ScaleTransition st = new ScaleTransition(Duration.millis(160), card);
+            st.setToX(1.02);
+            st.setToY(1.02);
+            st.play();
+        });
+        card.setOnMouseExited(e -> {
+            ScaleTransition st = new ScaleTransition(Duration.millis(160), card);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
+        });
     }
 
     public static void expandToFill(HBox row) {
@@ -368,7 +388,7 @@ class UIFactory {
     ) {
         HBox card = new HBox();
         card.setSpacing(8);
-        card.setPadding(new Insets(12));
+        card.setPadding(new Insets(12, 12, 22, 12));
         card.setAlignment(Pos.CENTER);
         card.getStyleClass().add("widget-card");
         card.setPrefSize(width, height);
@@ -393,6 +413,7 @@ class UIFactory {
         content.setAlignment(Pos.CENTER);
 
         card.getChildren().add(content);
+        applyHoverEffect(card);
         return card;
     }
 
