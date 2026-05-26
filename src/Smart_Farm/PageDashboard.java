@@ -1,5 +1,7 @@
 package Smart_Farm;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
@@ -7,16 +9,18 @@ import javafx.geometry.Pos;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PageDashboard {
 
     public static ScrollPane dashboardPage() {
-
         VBox center = new VBox();
         center.setSpacing(28);
         center.setPadding(new Insets(20));
@@ -35,6 +39,10 @@ public class PageDashboard {
         center.getChildren().add(UIFactory.createAnimatedTitle("📈 Analyses Détaillées"));
         center.getChildren().add(buildBarChartsRow());
 
+        center.getChildren().add(UIFactory.createAnimatedTitle("🌾 Statistiques Ferme Supplémentaires"));
+        center.getChildren().add(buildFarmExtraStatsRow());
+        center.getChildren().add(buildFarmExtraBarRow());
+
         center.getChildren().add(UIFactory.createAnimatedTitle("🔔 Dernières Alertes Actives"));
         center.getChildren().add(buildRecentAlertsCard());
 
@@ -43,46 +51,41 @@ public class PageDashboard {
         scroll.setPannable(true);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-
         return scroll;
     }
 
     // =========================================
-    // TOP STATS ROW — farm-wide counts
+    // TOP STATS ROW — muted palette
     // =========================================
     private static HBox buildTopStatsRow() {
         HBox row = new HBox(14);
         row.setPadding(new Insets(0, 10, 0, 10));
         row.setAlignment(Pos.CENTER);
-
         row.getChildren().addAll(
-                buildStatCard("🌍 Zones",    ZoneState.nbrZonesProperty(),       "#1565C0", "#E3F2FD"),
-                buildStatCard("🐄 Animaux",  AnimalState.nbrAnimalsProperty(),    "#2E7D32", "#E8F5E9"),
-                buildStatCard("🌱 Cultures", FarmState.nbrCulturesProperty(),     "#6A1B9A", "#F3E5F5"),
-                buildStatCard("📡 Capteurs", CapteurState.nbrCapteursProperty(),  "#E65100", "#FFF3E0"),
-                buildStatCard("🚨 Alertes",  AlerteState.nbrAlertesProperty(),    "#B71C1C", "#FFEBEE")
+            buildStatCard("🌍 Zones",    ZoneState.nbrZonesProperty(),       "#455A64", "#ECEFF1"),
+            buildStatCard("🐄 Animaux",  AnimalState.nbrAnimalsProperty(),    "#388E3C", "#F1F8E9"),
+            buildStatCard("🌱 Cultures", FarmState.nbrCulturesProperty(),     "#5D4037", "#EFEBE9"),
+            buildStatCard("📡 Capteurs", CapteurState.nbrCapteursProperty(),  "#0277BD", "#E1F5FE"),
+            buildStatCard("🚨 Alertes",  AlerteState.nbrAlertesProperty(),    "#C62828", "#FFEBEE")
         );
-
         UIFactory.expandToFill(row);
         return row;
     }
 
     // =========================================
-    // ALERT STATS ROW — all statuses
+    // ALERT STATS ROW — fixed emojis
     // =========================================
     private static HBox buildAlertStatsRow() {
         HBox row = new HBox(14);
         row.setPadding(new Insets(0, 10, 0, 10));
         row.setAlignment(Pos.CENTER);
-
         row.getChildren().addAll(
-                buildStatCard("⚠️ Actives",         AlerteState.nbrAlertesProperty(),        "#1565C0", "#E3F2FD"),
-                buildStatCard("🔴 Critiques",        AlerteState.nbrCritiquesProperty(),      "#B71C1C", "#FFEBEE"),
-                buildStatCard("🟡 Avertissements",   AlerteState.nbrAvertissementsProperty(), "#E65100", "#FFF3E0"),
-                buildStatCard("✅ Acquittées (total)", AlerteState.nbrAcquitteesProperty(),   "#2E7D32", "#E8F5E9"),
-                buildStatCard("🗑 Supprimées (total)", AlerteState.nbrSupprimeesProp(),       "#757575", "#F5F5F5")
+            buildStatCard("🔔 Actives",           AlerteState.nbrAlertesProperty(),        "#546E7A", "#ECEFF1"),
+            buildStatCard("🔴 Critiques",          AlerteState.nbrCritiquesProperty(),      "#C62828", "#FFEBEE"),
+            buildStatCard("🟡 Avertissements",     AlerteState.nbrAvertissementsProperty(), "#F57F17", "#FFF8E1"),
+            buildStatCard("✅ Acquittées (total)", AlerteState.nbrAcquitteesProperty(),     "#2E7D32", "#E8F5E9"),
+            buildStatCard("❌ Supprimées (total)", AlerteState.nbrSupprimeesProp(),         "#616161", "#F5F5F5")
         );
-
         UIFactory.expandToFill(row);
         return row;
     }
@@ -100,9 +103,9 @@ public class PageDashboard {
                 "-fx-background-color: " + bgColor + ";" +
                 "-fx-background-radius: 14;" +
                 "-fx-border-radius: 14;" +
-                "-fx-border-color: " + textColor + "44;" +
+                "-fx-border-color: " + textColor + "33;" +
                 "-fx-border-width: 1.5;" +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 10, 0.1, 0, 3);"
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0.1, 0, 3);"
         );
         HBox.setHgrow(card, Priority.ALWAYS);
 
@@ -149,15 +152,52 @@ public class PageDashboard {
         row.setPadding(new Insets(0, 10, 0, 10));
         row.setAlignment(Pos.CENTER);
 
-        VBox culturesCard  = buildChartCard("🌱 Cultures par Famille", buildCulturesBar());
-        VBox capteursCard  = buildChartCard("📡 Capteurs par Statut",  buildCapteursBar());
-        VBox alertesCard   = buildChartCard("📊 Résumé Alertes",        buildAlertesBar());
+        VBox culturesCard = buildChartCard("🌱 Cultures par Famille", buildCulturesBar());
+        VBox capteursCard = buildChartCard("📡 Capteurs par Statut",  buildCapteursBar());
+        VBox alertesCard  = buildChartCard("📊 Résumé Alertes",       buildAlertesBar());
 
         HBox.setHgrow(culturesCard, Priority.ALWAYS);
         HBox.setHgrow(capteursCard, Priority.ALWAYS);
         HBox.setHgrow(alertesCard,  Priority.ALWAYS);
 
         row.getChildren().addAll(culturesCard, capteursCard, alertesCard);
+        return row;
+    }
+
+    // =========================================
+    // EXTRA FARM STATS ROW
+    // =========================================
+    private static HBox buildFarmExtraStatsRow() {
+        HBox row = new HBox(14);
+        row.setPadding(new Insets(0, 10, 0, 10));
+        row.setAlignment(Pos.CENTER);
+        row.getChildren().addAll(
+            buildStatCard("🌿 Zones Culture",  ZoneState.nbrZoneCultureProperty(),  "#388E3C", "#F1F8E9"),
+            buildStatCard("🐑 Zones Elevage",  ZoneState.nbrZoneElevageProperty(),  "#6D4C41", "#EFEBE9"),
+            buildStatCard("🐟 Zones Aquacole", ZoneState.nbrZoneAquacoleProperty(), "#0277BD", "#E1F5FE"),
+            buildStatCard("🐄 Ruminants",      AnimalState.nbrRuminantsProperty(),  "#795548", "#EFEBE9"),
+            buildStatCard("🐔 Volaille",       AnimalState.nbrVolailleProperty(),   "#F57F17", "#FFF8E1"),
+            buildStatCard("🐠 Aquacole",       AnimalState.nbrAquacoleProperty(),   "#0288D1", "#E1F5FE")
+        );
+        UIFactory.expandToFill(row);
+        return row;
+    }
+
+    // =========================================
+    // EXTRA BAR CHARTS ROW
+    // =========================================
+    private static HBox buildFarmExtraBarRow() {
+        HBox row = new HBox(18);
+        row.setPadding(new Insets(0, 10, 0, 10));
+        row.setAlignment(Pos.CENTER);
+
+        VBox stagesCard = buildChartCard("🌿 Cultures par Stade de Croissance", buildCultureStagesBar());
+        VBox zonesCard  = buildChartCard("📍 Entités par Type de Zone",         buildZoneEntitiesBar());
+
+        HBox.setHgrow(stagesCard, Priority.ALWAYS);
+        HBox.setHgrow(zonesCard,  Priority.ALWAYS);
+
+        row.getChildren().addAll(stagesCard, zonesCard);
         return row;
     }
 
@@ -178,94 +218,139 @@ public class PageDashboard {
     }
 
     // =========================================
-    // ZONES DONUT
+    // ZONES DONUT — colored slices + circular legend
     // =========================================
-    private static StackPane buildZonesDonut() {
+    private static VBox buildZonesDonut() {
+        String[] allColors = {"#4CAF50", "#FF9800", "#2196F3"};
+        String[] labels    = {"Culture", "Elevage", "Aquacole"};
+
         PieChart chart = new PieChart();
-        chart.setLegendVisible(true);
+        chart.setLegendVisible(false);
         chart.setAnimated(true);
-        chart.setPrefSize(270, 230);
+        chart.setPrefSize(260, 220);
         chart.setLabelsVisible(false);
+
+        List<String> appliedColors = new ArrayList<>();
 
         Runnable refresh = () -> {
             chart.getData().clear();
-            int culture  = ZoneState.nbrZoneCultureProperty().get();
-            int elevage  = ZoneState.nbrZoneElevageProperty().get();
-            int aquacole = ZoneState.nbrZoneAquacoleProperty().get();
-            if (culture  > 0) chart.getData().add(new PieChart.Data("Culture ("  + culture  + ")", culture));
-            if (elevage  > 0) chart.getData().add(new PieChart.Data("Elevage ("  + elevage  + ")", elevage));
-            if (aquacole > 0) chart.getData().add(new PieChart.Data("Aquacole (" + aquacole + ")", aquacole));
+            appliedColors.clear();
+            int[] counts = {
+                ZoneState.nbrZoneCultureProperty().get(),
+                ZoneState.nbrZoneElevageProperty().get(),
+                ZoneState.nbrZoneAquacoleProperty().get()
+            };
+            for (int i = 0; i < labels.length; i++) {
+                if (counts[i] > 0) {
+                    chart.getData().add(new PieChart.Data(labels[i] + " (" + counts[i] + ")", counts[i]));
+                    appliedColors.add(allColors[i]);
+                }
+            }
             if (chart.getData().isEmpty()) chart.getData().add(new PieChart.Data("Aucune zone", 1));
+            new Timeline(new KeyFrame(Duration.millis(150), e -> {
+                for (int i = 0; i < chart.getData().size() && i < appliedColors.size(); i++) {
+                    PieChart.Data d = chart.getData().get(i);
+                    if (d.getNode() != null)
+                        d.getNode().setStyle("-fx-pie-color: " + appliedColors.get(i) + ";");
+                }
+            })).play();
         };
 
         refresh.run();
         ZoneState.nbrZonesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
 
-        return wrapDonut(chart);
+        VBox box = new VBox(6, wrapDonut(chart), buildCircleLegend(labels, allColors));
+        box.setAlignment(Pos.TOP_CENTER);
+        return box;
     }
 
     // =========================================
-    // ANIMAUX DONUT
+    // ANIMAUX DONUT — colored slices + circular legend
     // =========================================
-    private static StackPane buildAnimauxDonut() {
+    private static VBox buildAnimauxDonut() {
+        String[] allColors = {"#8D6E63", "#FFCA28", "#42A5F5"};
+        String[] labels    = {"Ruminants", "Volaille", "Aquacole"};
+
         PieChart chart = new PieChart();
-        chart.setLegendVisible(true);
+        chart.setLegendVisible(false);
         chart.setAnimated(true);
-        chart.setPrefSize(270, 230);
+        chart.setPrefSize(260, 220);
         chart.setLabelsVisible(false);
+
+        List<String> appliedColors = new ArrayList<>();
 
         Runnable refresh = () -> {
             chart.getData().clear();
-            int ruminants = AnimalState.nbrRuminantsProperty().get();
-            int volaille  = AnimalState.nbrVolailleProperty().get();
-            int aquacole  = AnimalState.nbrAquacoleProperty().get();
-            if (ruminants > 0) chart.getData().add(new PieChart.Data("Ruminants (" + ruminants + ")", ruminants));
-            if (volaille  > 0) chart.getData().add(new PieChart.Data("Volaille ("  + volaille  + ")", volaille));
-            if (aquacole  > 0) chart.getData().add(new PieChart.Data("Aquacole ("  + aquacole  + ")", aquacole));
+            appliedColors.clear();
+            int[] counts = {
+                AnimalState.nbrRuminantsProperty().get(),
+                AnimalState.nbrVolailleProperty().get(),
+                AnimalState.nbrAquacoleProperty().get()
+            };
+            for (int i = 0; i < labels.length; i++) {
+                if (counts[i] > 0) {
+                    chart.getData().add(new PieChart.Data(labels[i] + " (" + counts[i] + ")", counts[i]));
+                    appliedColors.add(allColors[i]);
+                }
+            }
             if (chart.getData().isEmpty()) chart.getData().add(new PieChart.Data("Aucun animal", 1));
+            new Timeline(new KeyFrame(Duration.millis(150), e -> {
+                for (int i = 0; i < chart.getData().size() && i < appliedColors.size(); i++) {
+                    PieChart.Data d = chart.getData().get(i);
+                    if (d.getNode() != null)
+                        d.getNode().setStyle("-fx-pie-color: " + appliedColors.get(i) + ";");
+                }
+            })).play();
         };
 
         refresh.run();
         AnimalState.nbrAnimalsProperty().addListener((o, v, n) -> Platform.runLater(refresh));
 
-        return wrapDonut(chart);
+        VBox box = new VBox(6, wrapDonut(chart), buildCircleLegend(labels, allColors));
+        box.setAlignment(Pos.TOP_CENTER);
+        return box;
     }
 
     // =========================================
-    // ALERTES DONUT — all statuses
+    // ALERTES DONUT — colored slices + circular legend
     // =========================================
-    private static StackPane buildAlerteDonut() {
+    private static VBox buildAlerteDonut() {
+        String[] allColors = {"#c62828", "#e65100", "#2e7d32", "#9e9e9e"};
+        String[] labels    = {"Critiques", "Avertissements", "Acquittées", "Supprimées"};
+
         PieChart chart = new PieChart();
-        chart.setLegendVisible(true);
+        chart.setLegendVisible(false);
         chart.setAnimated(true);
-        chart.setPrefSize(270, 230);
+        chart.setPrefSize(260, 220);
         chart.setLabelsVisible(false);
+
+        List<String> appliedColors = new ArrayList<>();
 
         Runnable refresh = () -> {
             chart.getData().clear();
+            appliedColors.clear();
             List<Alerte> all = GestionnaireCapteursAlertes.getInstance()
                     .filtrerAlertes(null, null, null, null, null);
-            long critiques      = all.stream().filter(a -> !a.isAcquittee() && !a.isSupprimee() && a.getNiveau() == Gravite.critique).count();
-            long avertissements = all.stream().filter(a -> !a.isAcquittee() && !a.isSupprimee() && a.getNiveau() == Gravite.avertissement).count();
-            long acquittees     = all.stream().filter(Alerte::isAcquittee).count();
-            long supprimees     = all.stream().filter(Alerte::isSupprimee).count();
-
-            if (critiques      > 0) chart.getData().add(new PieChart.Data("Critiques ("       + critiques      + ")", critiques));
-            if (avertissements > 0) chart.getData().add(new PieChart.Data("Avertissements ("  + avertissements + ")", avertissements));
-            if (acquittees     > 0) chart.getData().add(new PieChart.Data("Acquittées ("      + acquittees     + ")", acquittees));
-            if (supprimees     > 0) chart.getData().add(new PieChart.Data("Supprimées ("      + supprimees     + ")", supprimees));
-            if (chart.getData().isEmpty()) chart.getData().add(new PieChart.Data("Aucune alerte", 1));
-
-            Platform.runLater(() -> {
-                for (PieChart.Data d : chart.getData()) {
-                    if (d.getNode() == null) continue;
-                    String color = d.getName().startsWith("Critiques")      ? "#c62828"
-                                 : d.getName().startsWith("Avertissement")  ? "#e65100"
-                                 : d.getName().startsWith("Acquittées")     ? "#2e7d32"
-                                 : "#9e9e9e";
-                    d.getNode().setStyle("-fx-pie-color: " + color + ";");
+            long[] counts = {
+                all.stream().filter(a -> !a.isAcquittee() && !a.isSupprimee() && a.getNiveau() == Gravite.critique).count(),
+                all.stream().filter(a -> !a.isAcquittee() && !a.isSupprimee() && a.getNiveau() == Gravite.avertissement).count(),
+                all.stream().filter(Alerte::isAcquittee).count(),
+                all.stream().filter(Alerte::isSupprimee).count()
+            };
+            for (int i = 0; i < labels.length; i++) {
+                if (counts[i] > 0) {
+                    chart.getData().add(new PieChart.Data(labels[i] + " (" + counts[i] + ")", counts[i]));
+                    appliedColors.add(allColors[i]);
                 }
-            });
+            }
+            if (chart.getData().isEmpty()) chart.getData().add(new PieChart.Data("Aucune alerte", 1));
+            new Timeline(new KeyFrame(Duration.millis(150), e -> {
+                for (int i = 0; i < chart.getData().size() && i < appliedColors.size(); i++) {
+                    PieChart.Data d = chart.getData().get(i);
+                    if (d.getNode() != null)
+                        d.getNode().setStyle("-fx-pie-color: " + appliedColors.get(i) + ";");
+                }
+            })).play();
         };
 
         refresh.run();
@@ -273,15 +358,33 @@ public class PageDashboard {
         AlerteState.nbrAcquitteesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
         AlerteState.nbrSupprimeesProp().addListener((o, v, n)     -> Platform.runLater(refresh));
 
-        return wrapDonut(chart);
+        VBox box = new VBox(6, wrapDonut(chart), buildCircleLegend(labels, allColors));
+        box.setAlignment(Pos.TOP_CENTER);
+        return box;
+    }
+
+    // =========================================
+    // CIRCULAR LEGEND
+    // =========================================
+    private static HBox buildCircleLegend(String[] labels, String[] colors) {
+        HBox legend = new HBox(14);
+        legend.setAlignment(Pos.CENTER);
+        for (int i = 0; i < labels.length; i++) {
+            Circle dot = new Circle(6, Color.web(colors[i]));
+            Label lbl = new Label(labels[i]);
+            lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
+            HBox item = new HBox(5, dot, lbl);
+            item.setAlignment(Pos.CENTER_LEFT);
+            legend.getChildren().add(item);
+        }
+        return legend;
     }
 
     // =========================================
     // DONUT HOLE OVERLAY
     // =========================================
     private static StackPane wrapDonut(PieChart chart) {
-        Circle hole = new Circle(58);
-        hole.setStyle("-fx-fill: white;");
+        Circle hole = new Circle(65, Color.web("#f4f7f2"));
         hole.setMouseTransparent(true);
         return new StackPane(chart, hole);
     }
@@ -340,11 +443,11 @@ public class PageDashboard {
         Runnable refresh = () -> {
             chart.getData().clear();
             XYChart.Series<String, Number> s = new XYChart.Series<>();
-            s.getData().add(new XYChart.Data<>("Actives",       AlerteState.nbrAlertesProperty().get()));
-            s.getData().add(new XYChart.Data<>("Critiques",     AlerteState.nbrCritiquesProperty().get()));
-            s.getData().add(new XYChart.Data<>("Avert.",        AlerteState.nbrAvertissementsProperty().get()));
-            s.getData().add(new XYChart.Data<>("Acquittées",    AlerteState.nbrAcquitteesProperty().get()));
-            s.getData().add(new XYChart.Data<>("Supprimées",    AlerteState.nbrSupprimeesProp().get()));
+            s.getData().add(new XYChart.Data<>("Actives",    AlerteState.nbrAlertesProperty().get()));
+            s.getData().add(new XYChart.Data<>("Critiques",  AlerteState.nbrCritiquesProperty().get()));
+            s.getData().add(new XYChart.Data<>("Avert.",     AlerteState.nbrAvertissementsProperty().get()));
+            s.getData().add(new XYChart.Data<>("Acquittées", AlerteState.nbrAcquitteesProperty().get()));
+            s.getData().add(new XYChart.Data<>("Supprimées", AlerteState.nbrSupprimeesProp().get()));
             chart.getData().add(s);
             Platform.runLater(() -> {
                 for (XYChart.Data<String, Number> d : s.getData()) {
@@ -354,7 +457,7 @@ public class PageDashboard {
                         case "Avert."     -> "#e65100";
                         case "Acquittées" -> "#2e7d32";
                         case "Supprimées" -> "#9e9e9e";
-                        default           -> "#1565c0";
+                        default           -> "#546e7a";
                     };
                     d.getNode().setStyle("-fx-bar-fill: " + color + "; -fx-background-radius: 8 8 0 0;");
                 }
@@ -365,6 +468,72 @@ public class PageDashboard {
         AlerteState.nbrAlertesProperty().addListener((o, v, n)    -> Platform.runLater(refresh));
         AlerteState.nbrAcquitteesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
         AlerteState.nbrSupprimeesProp().addListener((o, v, n)     -> Platform.runLater(refresh));
+        return chart;
+    }
+
+    // =========================================
+    // CULTURE STAGES BAR
+    // =========================================
+    private static BarChart<String, Number> buildCultureStagesBar() {
+        BarChart<String, Number> chart = makeBarChart();
+        chart.setPrefHeight(200);
+
+        String[] stageColors = {"#81C784", "#AED581", "#FFF176", "#FFD54F", "#BCAAA4"};
+
+        Runnable refresh = () -> {
+            chart.getData().clear();
+            List<Culture> cultures = FarmState.getCultures();
+            XYChart.Series<String, Number> s = new XYChart.Series<>();
+            for (StadeCroissance stage : StadeCroissance.values()) {
+                long count = cultures.stream()
+                        .filter(c -> c.getStadeCroissance() == stage)
+                        .count();
+                s.getData().add(new XYChart.Data<>(stage.name(), (int) count));
+            }
+            chart.getData().add(s);
+            Platform.runLater(() -> {
+                List<XYChart.Data<String, Number>> data = s.getData();
+                for (int i = 0; i < data.size() && i < stageColors.length; i++) {
+                    if (data.get(i).getNode() != null)
+                        data.get(i).getNode().setStyle(
+                            "-fx-bar-fill: " + stageColors[i] + "; -fx-background-radius: 8 8 0 0;");
+                }
+            });
+        };
+
+        refresh.run();
+        FarmState.nbrCulturesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
+        return chart;
+    }
+
+    // =========================================
+    // ZONE ENTITIES BAR
+    // =========================================
+    private static BarChart<String, Number> buildZoneEntitiesBar() {
+        BarChart<String, Number> chart = makeBarChart();
+        chart.setPrefHeight(200);
+
+        Runnable refresh = () -> {
+            chart.getData().clear();
+            XYChart.Series<String, Number> s = new XYChart.Series<>();
+            int totalCulture = ZoneState.getZones().stream()
+                    .filter(z -> z instanceof ZoneCulture)
+                    .mapToInt(z -> z.getNbrEntite()).sum();
+            int totalElevage = ZoneState.getZones().stream()
+                    .filter(z -> z instanceof ZoneElevage)
+                    .mapToInt(z -> z.getNbrEntite()).sum();
+            int totalAquacole = ZoneState.getZones().stream()
+                    .filter(z -> z instanceof ZoneAquacole)
+                    .mapToInt(z -> z.getNbrEntite()).sum();
+            s.getData().add(new XYChart.Data<>("Culture",  totalCulture));
+            s.getData().add(new XYChart.Data<>("Elevage",  totalElevage));
+            s.getData().add(new XYChart.Data<>("Aquacole", totalAquacole));
+            chart.getData().add(s);
+            Platform.runLater(() -> colorBars(s, "Culture", "#4CAF50", "Elevage", "#FF9800", "#2196F3"));
+        };
+
+        refresh.run();
+        ZoneState.nbrZonesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
         return chart;
     }
 
