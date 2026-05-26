@@ -11,6 +11,10 @@ import javafx.scene.layout.*;
 
 public class Pages {
 
+    public static ScrollPane dashboardPage() {
+        return PageDashboard.dashboardPage();
+    }
+
     public static ScrollPane zonePage() {
 
        return PageZone.zonePage();

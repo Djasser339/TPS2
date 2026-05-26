@@ -71,7 +71,7 @@ public class SmartFarmApp extends Application {
         // TOP BAR
         // =========================
         root.setTop(UIFactory.createTopBar(
-                "Gestion des Zones",
+                "Tableau de Bord",
                 "Smart Farm",
                 bellContainer
         ));
@@ -79,7 +79,7 @@ public class SmartFarmApp extends Application {
         // =========================
         // PAGE PAR DÉFAUT
         // =========================
-        root.setCenter(PageZone.zonePage());
+        root.setCenter(PageDashboard.dashboardPage());
 
         // =========================
         // NAV BAR

@@ -81,16 +81,17 @@ class UIFactory {
         // BUTTONS
         // =================================
 
-        Button zoneBtn = createNavButton("🌍 Zones");
+        Button dashBtn    = createNavButton("🏠 Tableau de Bord");
+        Button zoneBtn    = createNavButton("🌍 Zones");
         Button cultureBtn = createNavButton("🌱 Cultures");
-        Button animalBtn = createNavButton("🐄 Animaux");
+        Button animalBtn  = createNavButton("🐄 Animaux");
         Button capteurBtn = createNavButton("📡 Capteurs");
-        Button alertBtn = createNavButton("🚨 Alertes");
+        Button alertBtn   = createNavButton("🚨 Alertes");
 
         // =================================
         // ACTIVE STATE TRACKING
         // =================================
-        List<Button> navBtns = List.of(zoneBtn, cultureBtn, animalBtn, capteurBtn, alertBtn);
+        List<Button> navBtns = List.of(dashBtn, zoneBtn, cultureBtn, animalBtn, capteurBtn, alertBtn);
         Consumer<Button> activate = btn -> {
             navBtns.forEach(b -> b.getStyleClass().remove("nav-button-active"));
             btn.getStyleClass().add("nav-button-active");
@@ -99,6 +100,12 @@ class UIFactory {
         // =================================
         // ACTIONS
         // =================================
+
+        dashBtn.setOnAction(e -> {
+            activate.accept(dashBtn);
+            root.setCenter(Pages.dashboardPage());
+            root.setTop(createTopBar("Tableau de Bord", "Smart Farm", bellNode));
+        });
 
         zoneBtn.setOnAction(e -> {
             activate.accept(zoneBtn);
@@ -130,8 +137,8 @@ class UIFactory {
             root.setTop(createTopBar("Gestion des Alertes", "Smart Farm", bellNode));
         });
 
-        // Zones is the default page — mark it active immediately
-        zoneBtn.getStyleClass().add("nav-button-active");
+        // Dashboard is the default page — mark it active immediately
+        dashBtn.getStyleClass().add("nav-button-active");
 
         // =================================
         // SECTION HEADER
@@ -141,6 +148,7 @@ class UIFactory {
 
         navBar.getChildren().addAll(
                 navSection,
+                dashBtn,
                 zoneBtn,
                 cultureBtn,
                 animalBtn,

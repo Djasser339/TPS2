@@ -311,6 +311,9 @@ public class PageAlertes {
 
         loadHistory(resultArea, null, null, null, null, null);
 
+        // Register so history auto-refreshes when an alert is deleted/acquitted
+        AlerteState.setHistoryRefresh(() -> loadHistory(resultArea, null, null, null, null, null));
+
         filtreBtn.setOnAction(e -> showFiltreModal(resultArea));
 
         // Pas de ScrollPane interne — la page entière scrolle

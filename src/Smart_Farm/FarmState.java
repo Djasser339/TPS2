@@ -788,15 +788,23 @@ class AlerteState {
     private static final IntegerProperty nbrAlertes        = new SimpleIntegerProperty(0);
     private static final IntegerProperty nbrCritiques      = new SimpleIntegerProperty(0);
     private static final IntegerProperty nbrAvertissements = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrSupprimees     = new SimpleIntegerProperty(0);
+    private static final IntegerProperty nbrAcquittees     = new SimpleIntegerProperty(0);
 
     private static Runnable alerteRefresh;
+    private static Runnable historyRefresh;
 
     public static void setAlerteRefresh(Runnable r) { alerteRefresh = r; }
     public static void refreshAlertes() { if (alerteRefresh != null) alerteRefresh.run(); }
 
+    public static void setHistoryRefresh(Runnable r) { historyRefresh = r; }
+    public static void refreshHistory() { if (historyRefresh != null) Platform.runLater(historyRefresh); }
+
     public static IntegerProperty nbrAlertesProperty()        { return nbrAlertes; }
     public static IntegerProperty nbrCritiquesProperty()      { return nbrCritiques; }
     public static IntegerProperty nbrAvertissementsProperty() { return nbrAvertissements; }
+    public static IntegerProperty nbrSupprimeesProp()         { return nbrSupprimees; }
+    public static IntegerProperty nbrAcquitteesProperty()     { return nbrAcquittees; }
 
     public static List<Alerte> getAlertesActives() {
         return GestionnaireCapteursAlertes.getInstance()
@@ -814,6 +822,13 @@ class AlerteState {
                 .filter(a -> a.getNiveau() == Gravite.critique).count());
         nbrAvertissements.set((int) actives.stream()
                 .filter(a -> a.getNiveau() == Gravite.avertissement).count());
+
+        List<Alerte> all = GestionnaireCapteursAlertes.getInstance()
+                .filtrerAlertes(null, null, null, null, null);
+        nbrSupprimees.set((int) all.stream().filter(Alerte::isSupprimee).count());
+        nbrAcquittees.set((int) all.stream().filter(Alerte::isAcquittee).count());
+
+        refreshHistory();
     }
 
     public static List<String> mapAlerte(Alerte a) {
