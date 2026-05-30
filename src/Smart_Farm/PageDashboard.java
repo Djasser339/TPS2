@@ -33,7 +33,7 @@ public class PageDashboard {
         center.getChildren().add(UIFactory.createAnimatedTitle("🚨 Statistiques des Alertes"));
         center.getChildren().add(buildAlertStatsRow());
 
-        center.getChildren().add(UIFactory.createAnimatedTitle("🍩 Répartition par Catégorie"));
+        center.getChildren().add(UIFactory.createAnimatedTitle("🎯 Répartition par Catégorie"));
         center.getChildren().add(buildDonutChartsRow());
 
         center.getChildren().add(UIFactory.createAnimatedTitle("📈 Analyses Détaillées"));
@@ -224,6 +224,8 @@ public class PageDashboard {
         String[] allColors = {"#4CAF50", "#FF9800", "#2196F3"};
         String[] labels    = {"Culture", "Elevage", "Aquacole"};
 
+        Label[] countLabels = new Label[labels.length];
+
         PieChart chart = new PieChart();
         chart.setLegendVisible(false);
         chart.setAnimated(true);
@@ -241,8 +243,9 @@ public class PageDashboard {
                 ZoneState.nbrZoneAquacoleProperty().get()
             };
             for (int i = 0; i < labels.length; i++) {
+                if (countLabels[i] != null) countLabels[i].setText(labels[i] + "  " + counts[i]);
                 if (counts[i] > 0) {
-                    chart.getData().add(new PieChart.Data(labels[i] + " (" + counts[i] + ")", counts[i]));
+                    chart.getData().add(new PieChart.Data(labels[i], counts[i]));
                     appliedColors.add(allColors[i]);
                 }
             }
@@ -256,10 +259,11 @@ public class PageDashboard {
             })).play();
         };
 
+        HBox legend = buildCircleLegend(labels, allColors, countLabels);
         refresh.run();
         ZoneState.nbrZonesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
 
-        VBox box = new VBox(6, wrapDonut(chart), buildCircleLegend(labels, allColors));
+        VBox box = new VBox(6, wrapDonut(chart), legend);
         box.setAlignment(Pos.TOP_CENTER);
         return box;
     }
@@ -270,6 +274,8 @@ public class PageDashboard {
     private static VBox buildAnimauxDonut() {
         String[] allColors = {"#8D6E63", "#FFCA28", "#42A5F5"};
         String[] labels    = {"Ruminants", "Volaille", "Aquacole"};
+
+        Label[] countLabels = new Label[labels.length];
 
         PieChart chart = new PieChart();
         chart.setLegendVisible(false);
@@ -288,8 +294,9 @@ public class PageDashboard {
                 AnimalState.nbrAquacoleProperty().get()
             };
             for (int i = 0; i < labels.length; i++) {
+                if (countLabels[i] != null) countLabels[i].setText(labels[i] + "  " + counts[i]);
                 if (counts[i] > 0) {
-                    chart.getData().add(new PieChart.Data(labels[i] + " (" + counts[i] + ")", counts[i]));
+                    chart.getData().add(new PieChart.Data(labels[i], counts[i]));
                     appliedColors.add(allColors[i]);
                 }
             }
@@ -303,10 +310,11 @@ public class PageDashboard {
             })).play();
         };
 
+        HBox legend = buildCircleLegend(labels, allColors, countLabels);
         refresh.run();
         AnimalState.nbrAnimalsProperty().addListener((o, v, n) -> Platform.runLater(refresh));
 
-        VBox box = new VBox(6, wrapDonut(chart), buildCircleLegend(labels, allColors));
+        VBox box = new VBox(6, wrapDonut(chart), legend);
         box.setAlignment(Pos.TOP_CENTER);
         return box;
     }
@@ -317,6 +325,8 @@ public class PageDashboard {
     private static VBox buildAlerteDonut() {
         String[] allColors = {"#c62828", "#e65100", "#2e7d32", "#9e9e9e"};
         String[] labels    = {"Critiques", "Avertissements", "Acquittées", "Supprimées"};
+
+        Label[] countLabels = new Label[labels.length];
 
         PieChart chart = new PieChart();
         chart.setLegendVisible(false);
@@ -338,8 +348,9 @@ public class PageDashboard {
                 all.stream().filter(Alerte::isSupprimee).count()
             };
             for (int i = 0; i < labels.length; i++) {
+                if (countLabels[i] != null) countLabels[i].setText(labels[i] + "  " + counts[i]);
                 if (counts[i] > 0) {
-                    chart.getData().add(new PieChart.Data(labels[i] + " (" + counts[i] + ")", counts[i]));
+                    chart.getData().add(new PieChart.Data(labels[i], counts[i]));
                     appliedColors.add(allColors[i]);
                 }
             }
@@ -353,26 +364,28 @@ public class PageDashboard {
             })).play();
         };
 
+        HBox legend = buildCircleLegend(labels, allColors, countLabels);
         refresh.run();
         AlerteState.nbrAlertesProperty().addListener((o, v, n)    -> Platform.runLater(refresh));
         AlerteState.nbrAcquitteesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
         AlerteState.nbrSupprimeesProp().addListener((o, v, n)     -> Platform.runLater(refresh));
 
-        VBox box = new VBox(6, wrapDonut(chart), buildCircleLegend(labels, allColors));
+        VBox box = new VBox(6, wrapDonut(chart), legend);
         box.setAlignment(Pos.TOP_CENTER);
         return box;
     }
 
     // =========================================
-    // CIRCULAR LEGEND
+    // CIRCULAR LEGEND (with live count labels)
     // =========================================
-    private static HBox buildCircleLegend(String[] labels, String[] colors) {
+    private static HBox buildCircleLegend(String[] labels, String[] colors, Label[] outCountLabels) {
         HBox legend = new HBox(14);
         legend.setAlignment(Pos.CENTER);
         for (int i = 0; i < labels.length; i++) {
             Circle dot = new Circle(6, Color.web(colors[i]));
-            Label lbl = new Label(labels[i]);
+            Label lbl = new Label(labels[i] + "  0");
             lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
+            outCountLabels[i] = lbl;
             HBox item = new HBox(5, dot, lbl);
             item.setAlignment(Pos.CENTER_LEFT);
             legend.getChildren().add(item);
@@ -550,7 +563,9 @@ public class PageDashboard {
         Runnable refresh = () -> {
             listBox.getChildren().clear();
             List<Alerte> recent = AlerteState.getAlertesActives()
-                    .stream().limit(6).collect(Collectors.toList());
+                    .stream()
+                    .sorted((a1, a2) -> a2.getDateCreation().compareTo(a1.getDateCreation()))
+                    .limit(6).collect(Collectors.toList());
 
             if (recent.isEmpty()) {
                 Label none = new Label("✅ Aucune alerte active");

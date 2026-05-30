@@ -246,7 +246,7 @@ public class PageZone {
         val1.textProperty().bind(value1.asString());
         val1.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2E5E3B;");
 
-        Button btn1 = createActionButton("🏷️ Affecter Culture", () -> {});
+        Button btn1 = createActionButton(">> Affecter Culture", () -> {});
         btn1.setMaxWidth(Double.MAX_VALUE);
         btn1.setOnAction(e -> showAssignToZoneForm(
                 "Affecter Culture",
@@ -280,7 +280,7 @@ public class PageZone {
         val2.textProperty().bind(value2.asString());
         val2.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2E5E3B;");
 
-        Button btn2 = createActionButton("🏷️ Affecter Animal", () -> {});
+        Button btn2 = createActionButton(">> Affecter Animal", () -> {});
         btn2.setMaxWidth(Double.MAX_VALUE);
         btn2.setOnAction(e -> showAssignToZoneForm(
                 "Affecter Animal",

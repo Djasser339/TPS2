@@ -249,15 +249,15 @@ public class PageCulture {
             stadeLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #555;");
             stadeLbl.setPrefWidth(115);
 
-            Label phLbl = new Label("pH " + String.format("%.1f", c.getPH()));
+            Label phLbl = new Label("pH " + (int)c.getExigencePH().getMin() + "–" + (int)c.getExigencePH().getMax());
             phLbl.setStyle(
                     "-fx-font-size: 11px; -fx-text-fill: #2E5E3B;" +
                     "-fx-background-color: #e8f5e9; -fx-padding: 2 8;" +
                     "-fx-background-radius: 8;"
             );
-            phLbl.setPrefWidth(70);
+            phLbl.setPrefWidth(80);
 
-            Label humLbl = new Label("💧 " + String.format("%.0f", c.getHumidite()) + "%");
+            Label humLbl = new Label("💧 " + (int)c.getExigenceHumidite().getMin() + "–" + (int)c.getExigenceHumidite().getMax() + "%");
             humLbl.setStyle(
                     "-fx-font-size: 11px; -fx-text-fill: #1565C0;" +
                     "-fx-background-color: #e3f2fd; -fx-padding: 2 8;" +
@@ -343,12 +343,12 @@ public class PageCulture {
                 new Alert(Alert.AlertType.ERROR, "Choisir une date de récolte", ButtonType.OK).showAndWait();
                 return;
             }
-            if (phMinSpinner.getValue() > phMaxSpinner.getValue()) {
-                new Alert(Alert.AlertType.ERROR, "PH Min > PH Max", ButtonType.OK).showAndWait();
+            if (phMinSpinner.getValue() >= phMaxSpinner.getValue()) {
+                new Alert(Alert.AlertType.ERROR, "PH Min doit être strictement inférieur à PH Max", ButtonType.OK).showAndWait();
                 return;
             }
-            if (humMinSpinner.getValue() > humMaxSpinner.getValue()) {
-                new Alert(Alert.AlertType.ERROR, "Humidité Min > Humidité Max", ButtonType.OK).showAndWait();
+            if (humMinSpinner.getValue() >= humMaxSpinner.getValue()) {
+                new Alert(Alert.AlertType.ERROR, "Humidité Min doit être strictement inférieure à Humidité Max", ButtonType.OK).showAndWait();
                 return;
             }
 

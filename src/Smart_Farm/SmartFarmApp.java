@@ -44,7 +44,7 @@ public class SmartFarmApp extends Application {
         AlerteState.nbrAlertesProperty().addListener((obs, oldVal, newVal) -> {
             Platform.runLater(() -> {
                 int count = newVal.intValue();
-                badge.setText(String.valueOf(count));
+                badge.setText(count > 99 ? "99+" : String.valueOf(count));
                 badge.setVisible(count > 0);
             });
         });
@@ -53,7 +53,16 @@ public class SmartFarmApp extends Application {
         Popup popup = new Popup();
         popup.setAutoHide(true);
 
+        // Track when the popup was last hidden so we can distinguish
+        // "autoHide triggered by clicking the bell button" from a real outside click.
+        final long[] lastHideMs = {0};
+        popup.setOnHidden(e -> lastHideMs[0] = System.currentTimeMillis());
+
         bellBtn.setOnMouseClicked(e -> {
+            // If the popup was just auto-hidden because this very click landed on the
+            // bell button (autoHide fires before the button handler), don't reopen it.
+            if (System.currentTimeMillis() - lastHideMs[0] < 200) return;
+
             if (popup.isShowing()) {
                 popup.hide();
                 return;
@@ -130,26 +139,63 @@ public class SmartFarmApp extends Application {
     // =========================================
     private VBox buildBellPopup() {
 
-        VBox box = new VBox(8);
-        box.setPadding(new Insets(15));
-        box.setMinWidth(340);
-        box.setMaxWidth(340);
+        VBox box = new VBox(0);
+        box.setMinWidth(360);
+        box.setMaxWidth(360);
         box.getStyleClass().add("bell-popup");
 
-        Label title = new Label("🔔 Dernières Alertes");
-        title.getStyleClass().add("bell-popup-title");
-        box.getChildren().add(title);
-
+        // ── Header ──────────────────────────────────────────────
         List<Alerte> alertes = AlerteState.getAlertesActives();
+        alertes.sort((a1, a2) -> a2.getDateCreation().compareTo(a1.getDateCreation()));
+
+        int total = alertes.size();
+        String countText = total == 0 ? "Aucune alerte active"
+                : total == 1 ? "1 alerte active"
+                : (total > 99 ? "99+" : total) + " alertes actives";
+
+        HBox header = new HBox(8);
+        header.setPadding(new Insets(14, 16, 12, 16));
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setStyle("-fx-background-color: #f8fdf8; -fx-background-radius: 14 14 0 0;");
+
+        Label titleLbl = new Label("🔔 Alertes");
+        titleLbl.getStyleClass().add("bell-popup-title");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Label countLbl = new Label(countText);
+        countLbl.setStyle(
+                "-fx-font-size: 11px; -fx-font-weight: bold;"
+                + "-fx-text-fill: white;"
+                + "-fx-background-color: " + (total == 0 ? "#9e9e9e" : "#c62828") + ";"
+                + "-fx-background-radius: 10;"
+                + "-fx-padding: 2 8;"
+        );
+
+        header.getChildren().addAll(titleLbl, spacer, countLbl);
+        box.getChildren().add(header);
+
+        // ── Divider ─────────────────────────────────────────────
+        javafx.scene.control.Separator sep = new javafx.scene.control.Separator();
+        sep.setPadding(new Insets(0));
+        box.getChildren().add(sep);
 
         if (alertes.isEmpty()) {
-            Label none = new Label("✅ Aucune alerte active");
+            HBox noneRow = new HBox();
+            noneRow.setPadding(new Insets(16));
+            noneRow.setAlignment(Pos.CENTER);
+            Label none = new Label("✅ Aucune alerte active en ce moment");
             none.setStyle("-fx-text-fill: #4caf50; -fx-font-size: 13px;");
-            box.getChildren().add(none);
+            noneRow.getChildren().add(none);
+            box.getChildren().add(noneRow);
             return box;
         }
 
-        // Show up to 8 most recent active alerts (already sorted critical first)
+        // ── Alert rows ──────────────────────────────────────────
+        VBox listBox = new VBox(6);
+        listBox.setPadding(new Insets(10, 12, 10, 12));
+
         int shown = Math.min(alertes.size(), 8);
         for (int i = 0; i < shown; i++) {
 
@@ -157,46 +203,71 @@ public class SmartFarmApp extends Application {
 
             GestionnaireCapteursAlertes g = GestionnaireCapteursAlertes.getInstance();
             Capteur c = g.getCapteurById(a.getReleve().getIdCapteur());
-            String zone = (c != null) ? c.getZoneId() : "?";
+            String zone    = (c != null) ? c.getZoneId()  : "?";
+            String typeStr = (c != null) ? c.getTypeNom() : "?";
 
-            String icon, color, bg;
+            String icon, color, bg, borderColor;
             switch (a.getNiveau()) {
-                case critique      -> { icon = "🔴"; color = "#c62828"; bg = "#ffebee"; }
-                case avertissement -> { icon = "🟡"; color = "#e65100"; bg = "#fff3e0"; }
-                default            -> { icon = "🟢"; color = "#2e7d32"; bg = "#e8f5e9"; }
+                case critique      -> { icon = "🔴"; color = "#c62828"; bg = "#fff5f5"; borderColor = "#ffcdd2"; }
+                case avertissement -> { icon = "🟡"; color = "#e65100"; bg = "#fffbf0"; borderColor = "#ffe0b2"; }
+                default            -> { icon = "🟢"; color = "#2e7d32"; bg = "#f5fbf5"; borderColor = "#c8e6c9"; }
             }
 
-            HBox row = new HBox(8);
-            row.setPadding(new Insets(6, 10, 6, 10));
+            HBox row = new HBox(10);
+            row.setPadding(new Insets(8, 12, 8, 12));
             row.setAlignment(Pos.CENTER_LEFT);
             row.setStyle(
                     "-fx-background-color: " + bg + ";"
-                    + "-fx-background-radius: 8;"
+                    + "-fx-background-radius: 10;"
+                    + "-fx-border-color: " + borderColor + ";"
+                    + "-fx-border-radius: 10;"
+                    + "-fx-border-width: 1;"
             );
 
             Label iconLbl = new Label(icon);
-            iconLbl.setStyle("-fx-font-size: 14px;");
+            iconLbl.setStyle("-fx-font-size: 15px;");
 
-            VBox info = new VBox(1);
-            Label topLine = new Label(a.getNiveau().name().toUpperCase() + "  —  Zone: " + zone
-                    + "  |  " + a.getReleve().getValeurAsString());
-            topLine.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: " + color + ";");
+            VBox info = new VBox(2);
+            HBox.setHgrow(info, Priority.ALWAYS);
 
+            // Niveau + zone + valeur
+            Label topLine = new Label(
+                    a.getNiveau().name().toUpperCase()
+                    + "  ·  Zone: " + zone
+                    + "  ·  " + typeStr
+                    + "  →  " + a.getReleve().getValeurAsString()
+            );
+            topLine.setStyle(
+                    "-fx-font-weight: bold; -fx-font-size: 11.5px;"
+                    + "-fx-text-fill: " + color + ";"
+            );
+            topLine.setWrapText(false);
+
+            // Date + capteur ID
             Label timeLine = new Label(
-                    a.getDateCreation().format(DateTimeFormatter.ofPattern("yyyy-MM-dd  HH:mm"))
+                    a.getDateCreation().format(DateTimeFormatter.ofPattern("dd/MM/yyyy  HH:mm"))
                     + "   [" + a.getReleve().getIdCapteur() + "]"
             );
-            timeLine.setStyle("-fx-font-size: 11px; -fx-text-fill: #757575;");
+            timeLine.setStyle("-fx-font-size: 10.5px; -fx-text-fill: #888;");
 
             info.getChildren().addAll(topLine, timeLine);
             row.getChildren().addAll(iconLbl, info);
-            box.getChildren().add(row);
+            listBox.getChildren().add(row);
         }
 
+        box.getChildren().add(listBox);
+
+        // ── Footer overflow ──────────────────────────────────────
         if (alertes.size() > 8) {
-            Label more = new Label("... et " + (alertes.size() - 8) + " autres alertes");
-            more.setStyle("-fx-text-fill: #9e9e9e; -fx-font-size: 11px;");
-            box.getChildren().add(more);
+            javafx.scene.control.Separator sep2 = new javafx.scene.control.Separator();
+            HBox footer = new HBox();
+            footer.setPadding(new Insets(8, 16, 12, 16));
+            footer.setAlignment(Pos.CENTER);
+            int remaining = alertes.size() - 8;
+            Label more = new Label("+ " + remaining + " autre" + (remaining > 1 ? "s" : "") + " alerte" + (remaining > 1 ? "s" : "") + " — voir la page Alertes");
+            more.setStyle("-fx-text-fill: #757575; -fx-font-size: 11px; -fx-font-style: italic;");
+            footer.getChildren().add(more);
+            box.getChildren().addAll(sep2, footer);
         }
 
         return box;

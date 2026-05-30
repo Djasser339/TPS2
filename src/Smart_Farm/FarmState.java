@@ -130,17 +130,14 @@ public class FarmState {
     // TABLE MAPPER (IMPORTANT CLEAN FIX)
     // =========================================
     public static List<String> mapCulture(Culture c) {
-
         return List.of(
                 String.valueOf(c.getFamille()),
                 String.valueOf(c.getStadeCroissance()),
                 String.valueOf(c.getDatePlantation()),
                 String.valueOf(c.getDateRecolte()),
-                String.format("%.4f", c.getPH()),
-                String.format("%.4f", c.getHumidite())
-
-
-                );
+                (int)c.getExigencePH().getMin() + " – " + (int)c.getExigencePH().getMax(),
+                (int)c.getExigenceHumidite().getMin() + "% – " + (int)c.getExigenceHumidite().getMax() + "%"
+        );
     }
 }
 
