@@ -224,9 +224,6 @@ public class SmartFarmApp extends Application {
                     + "-fx-border-width: 1;"
             );
 
-            Label iconLbl = new Label(icon);
-            iconLbl.setStyle("-fx-font-size: 15px;");
-
             VBox info = new VBox(2);
             HBox.setHgrow(info, Priority.ALWAYS);
 
@@ -252,7 +249,7 @@ public class SmartFarmApp extends Application {
             timeLine.setStyle("-fx-font-size: 10.5px; -fx-text-fill: #888;");
 
             info.getChildren().addAll(topLine, timeLine);
-            row.getChildren().addAll(iconLbl, info);
+            row.getChildren().add(info);
             listBox.getChildren().add(row);
         }
 

@@ -371,9 +371,6 @@ public class PageAlertes {
             row.setAlignment(Pos.CENTER_LEFT);
             row.getStyleClass().add("alerte-history-item");
 
-            Label iconLbl = new Label(icon);
-            iconLbl.setStyle("-fx-font-size: 15px;");
-
             Label idLbl = new Label("#" + a.getId());
             idLbl.setStyle("-fx-text-fill: #777; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-overrun: clip;");
             idLbl.setPrefWidth(42);
@@ -404,7 +401,7 @@ public class PageAlertes {
                     "-fx-background-color: " + statutColor + "; -fx-padding: 2 7;" +
                     "-fx-background-radius: 6;");
 
-            row.getChildren().addAll(iconLbl, idLbl, zoneLbl, capteurLbl, niveauLbl, valLbl, dateLbl, statutLbl);
+            row.getChildren().addAll(idLbl, zoneLbl, capteurLbl, niveauLbl, valLbl, dateLbl, statutLbl);
             row.setOnMouseClicked(e ->
                     showAlerteActionForm(a, () -> loadHistory(resultArea, null, null, null, null, null)));
 
