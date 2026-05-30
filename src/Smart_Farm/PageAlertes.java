@@ -375,28 +375,28 @@ public class PageAlertes {
             iconLbl.setStyle("-fx-font-size: 15px;");
 
             Label idLbl = new Label("#" + a.getId());
-            idLbl.setStyle("-fx-text-fill: #777; -fx-font-size: 11px; -fx-font-weight: bold;");
+            idLbl.setStyle("-fx-text-fill: #777; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-overrun: clip;");
             idLbl.setPrefWidth(42);
 
             Label zoneLbl = new Label(z);
-            zoneLbl.setStyle("-fx-text-fill: #3B7249; -fx-font-size: 12px; -fx-font-weight: bold;");
+            zoneLbl.setStyle("-fx-text-fill: #3B7249; -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-overrun: clip;");
             zoneLbl.setPrefWidth(100);
 
             Label capteurLbl = new Label(capteurId + " (" + capteurType + ")");
-            capteurLbl.setStyle("-fx-text-fill: #1565C0; -fx-font-size: 11px;");
+            capteurLbl.setStyle("-fx-text-fill: #1565C0; -fx-font-size: 11px; -fx-text-overrun: clip;");
             capteurLbl.setPrefWidth(150);
 
             Label niveauLbl = new Label(a.getNiveau().name().toUpperCase());
-            niveauLbl.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 12px; -fx-font-weight: bold;");
+            niveauLbl.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-overrun: clip;");
             niveauLbl.setPrefWidth(100);
 
             Label valLbl = new Label(a.getReleve().getValeurAsString());
-            valLbl.setStyle("-fx-text-fill: #444; -fx-font-size: 12px;");
+            valLbl.setStyle("-fx-text-fill: #444; -fx-font-size: 12px; -fx-text-overrun: clip;");
             valLbl.setPrefWidth(110);
 
             Label dateLbl = new Label(a.getDateCreation()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-            dateLbl.setStyle("-fx-text-fill: #888; -fx-font-size: 11px;");
+            dateLbl.setStyle("-fx-text-fill: #888; -fx-font-size: 11px; -fx-text-overrun: clip;");
             dateLbl.setPrefWidth(120);
 
             Label statutLbl = new Label(statutText);

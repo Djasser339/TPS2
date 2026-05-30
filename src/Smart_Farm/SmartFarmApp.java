@@ -240,6 +240,7 @@ public class SmartFarmApp extends Application {
             topLine.setStyle(
                     "-fx-font-weight: bold; -fx-font-size: 11.5px;"
                     + "-fx-text-fill: " + color + ";"
+                    + "-fx-text-overrun: clip;"
             );
             topLine.setWrapText(false);
 

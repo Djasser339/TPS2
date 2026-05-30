@@ -42,6 +42,8 @@ public class SampleData {
                 new Seuil(6.0, 7.0), new Seuil(60, 80));
         FarmState.addCulture(ble);
         FarmState.addCulture(tomate);
+        zoneBle.ajouterCulture(ble);
+        zoneBle.ajouterCulture(tomate);
 
         // ── Animaux ────────────────────────────────────────────────────
         Ruminant bovin = new Ruminant(TypeEspece.ruminant, "Bessie");
@@ -50,6 +52,8 @@ public class SampleData {
         poule.setAge(1); poule.setPoid(3);
         AnimalState.addAnimal(bovin);
         AnimalState.addAnimal(poule);
+        zoneBovins.ajouterRuminant(bovin);
+        zonePoules.ajouterVollaile(poule);
 
         // ── Capteurs — Zone-Ble ────────────────────────────────────────
         // Narrow thresholds so random readings reliably produce alerts
@@ -78,6 +82,7 @@ public class SampleData {
             for (int i = 0; i < 20; i++) c.envoyerReleve();
         }
 
+        ZoneState.refresh();
         AlerteState.updateStats();
     }
 }
