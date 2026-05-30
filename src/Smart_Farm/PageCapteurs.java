@@ -500,10 +500,21 @@ public class PageCapteurs {
         Label zoneLabel = new Label("Zone");
         zoneLabel.getStyleClass().add("form-label");
         ComboBox<String> zoneCombo = new ComboBox<>();
-        ZoneState.getZones().forEach(z -> zoneCombo.getItems().add(z.getNom()));
         zoneCombo.setEditable(true);
         zoneCombo.setPromptText("Ex: ZONE-A");
         zoneCombo.setMaxWidth(Double.MAX_VALUE);
+
+        java.util.function.Function<String, List<Zone>> zonesForType = typeName -> switch (typeName) {
+            case "Environnemental", "Sol" -> ZoneState.getZones().stream()
+                    .filter(z -> z instanceof ZoneCulture).collect(Collectors.toList());
+            case "Biométrique", "GPS" -> ZoneState.getZones().stream()
+                    .filter(z -> z instanceof ZoneElevage).collect(Collectors.toList());
+            case "Eau" -> ZoneState.getZones().stream()
+                    .filter(z -> z instanceof ZoneAquacole).collect(Collectors.toList());
+            default -> ZoneState.getZones();
+        };
+
+        zonesForType.apply("Environnemental").forEach(z -> zoneCombo.getItems().add(z.getNom()));
 
         // TYPE CAPTEUR
         Label typeLabel = new Label("Type Capteur");
@@ -552,6 +563,13 @@ public class PageCapteurs {
             seuilMax.setDisable(notNumeric);
             if (!notNumeric && !mesureCombo.getItems().isEmpty())
                 mesureCombo.setValue(mesureCombo.getItems().get(0));
+
+            // Refresh zone list filtered by capteur type
+            String prevZone = zoneCombo.getEditor().getText();
+            zoneCombo.getItems().setAll(
+                    zonesForType.apply(typeCombo.getValue()).stream()
+                            .map(Zone::getNom).collect(Collectors.toList()));
+            zoneCombo.getEditor().setText(prevZone);
         });
 
         Button validateBtn = new Button("✔  Valider");

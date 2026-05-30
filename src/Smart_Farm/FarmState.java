@@ -439,7 +439,7 @@ class ZoneState {
     /*
      *  MODIFIER ICI : intervale de production (secondes)
      */
-    private static final int PRODUCTION_INTERVAL = 10;
+    private static final int PRODUCTION_INTERVAL = 60;
 
     // évite double timeline par zone
     private static final Set<Zone> runningZones = new HashSet<>();

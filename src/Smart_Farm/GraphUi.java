@@ -193,14 +193,8 @@ class FarmBarGraph {
 
         parent.getChildren().add(valueLabel);
 
-        StackPane.setAlignment(
-                valueLabel,
-                Pos.TOP_CENTER
-        );
-
-        valueLabel.translateYProperty().bind(
-                parent.heightProperty().multiply(-0.5)
-        );
+        StackPane.setAlignment(valueLabel, Pos.TOP_CENTER);
+        valueLabel.setTranslateY(5);
     }
 
     // =========================================================
