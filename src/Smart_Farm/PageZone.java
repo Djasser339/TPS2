@@ -3,8 +3,10 @@
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -157,9 +159,19 @@ public class PageZone {
         // =========================
         // CARTE VISUELLE DES ZONES
         // =========================
-        center.getChildren().add(
-                UIFactory.createAnimatedTitle("Carte Visuelle des Zones")
+        HBox mapTitleRow = UIFactory.createAnimatedTitle("Carte Visuelle des Zones");
+        Button fsBtnTitle = new Button("⛶");
+        fsBtnTitle.setStyle(
+                "-fx-background-color: transparent; -fx-border-color: #3B7249;" +
+                "-fx-border-radius: 6; -fx-border-width: 1.5; -fx-font-size: 15px;" +
+                "-fx-text-fill: #3B7249; -fx-cursor: hand; -fx-padding: 2 9;"
         );
+        fsBtnTitle.setTooltip(new Tooltip("Plein écran"));
+        Region mapTitleSpacer = new Region();
+        HBox.setHgrow(mapTitleSpacer, Priority.ALWAYS);
+        mapTitleRow.getChildren().addAll(mapTitleSpacer, fsBtnTitle);
+        fsBtnTitle.setOnAction(e -> showFullscreenMap());
+        center.getChildren().add(mapTitleRow);
         center.getChildren().add(createZoneMapCard());
 
 
@@ -758,13 +770,25 @@ public class PageZone {
                 "-fx-border-radius: 8;" +
                 "-fx-background-radius: 8;"
         );
-        // Clip : empêche les grandes zones de déborder visuellement hors de la carte
         mapPane.setClip(new Rectangle(W, H));
 
+        Runnable buildMap = buildMapContent(mapPane, W, H);
+        buildMap.run();
+        ZoneState.nbrZonesProperty().addListener((obs, o, n) -> Platform.runLater(buildMap));
+        ZoneState.setMapRefresh(buildMap);
+
+        card.getChildren().add(mapPane);
+        return card;
+    }
+
+    // =========================================
+    // CONTENU DE LA CARTE (partagé carte + plein écran)
+    // =========================================
+    private static Runnable buildMapContent(Pane mapPane, double W, double H) {
         String[] ZONE_COLORS = {"#e65100","#1565C0","#6a1b9a","#00695c","#c62828","#f57f17"};
         String[] ZONE_BG     = {"#fff8e1","#e3f2fd","#f3e5f5","#e0f2f1","#ffebee","#fffde7"};
 
-        Runnable buildMap = () -> {
+        return () -> {
             mapPane.getChildren().clear();
 
             List<ZoneElevage> elevZones = ZoneState.getZones().stream()
@@ -784,22 +808,18 @@ public class PageZone {
                 return;
             }
 
-            // Viewport basé sur l'étendue des CENTRES (garantit la visibilité de tous les centres).
-            // Contrairement aux extents, les centres ne sont pas gonflés par de grandes zones.
-            double minCLat = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLatMin()  + z.getLimitZone().getLatMax())  / 2.0).min().orElse(40);
-            double maxCLat = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLatMin()  + z.getLimitZone().getLatMax())  / 2.0).max().orElse(46);
-            double minCLon = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLonMin()  + z.getLimitZone().getLonMax())  / 2.0).min().orElse(-5);
-            double maxCLon = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLonMin()  + z.getLimitZone().getLonMax())  / 2.0).max().orElse(10);
+            // Viewport basé sur l'étendue réelle de toutes les zones (min/max lat/lon)
+            double minLat = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLatMin()).min().orElse(40);
+            double maxLat = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLatMax()).max().orElse(46);
+            double minLon = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLonMin()).min().orElse(-5);
+            double maxLon = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLonMax()).max().orElse(10);
 
-            double latSpread = Math.max(maxCLat - minCLat, 2.0);
-            double lonSpread = Math.max(maxCLon - minCLon, 2.0);
-            double latPad    = latSpread * 0.4;
-            double lonPad    = lonSpread * 0.4;
-
-            final double vLatMin = minCLat - latPad;
-            final double vLatMax = maxCLat + latPad;
-            final double vLonMin = minCLon - lonPad;
-            final double vLonMax = maxCLon + lonPad;
+            double latSpread = Math.max(maxLat - minLat, 1.0);
+            double lonSpread = Math.max(maxLon - minLon, 1.0);
+            final double vLatMin = minLat - latSpread * 0.12;
+            final double vLatMax = maxLat + latSpread * 0.12;
+            final double vLonMin = minLon - lonSpread * 0.12;
+            final double vLonMax = maxLon + lonSpread * 0.12;
             final double totalLat = vLatMax - vLatMin;
             final double totalLon = vLonMax - vLonMin;
 
@@ -838,26 +858,24 @@ public class PageZone {
                 ZoneElevage ze = elevZones.get(idx);
                 GeographicalLimits lim = ze.getLimitZone();
 
-                // Projection géographique brute
-                double rawX1 = (lim.getLonMin() - vLonMin) / totalLon * W;
-                double rawX2 = (lim.getLonMax() - vLonMin) / totalLon * W;
-                double rawY1 = (vLatMax - lim.getLatMax()) / totalLat * H;
-                double rawY2 = (vLatMax - lim.getLatMin()) / totalLat * H;
+                double x1 = (lim.getLonMin() - vLonMin) / totalLon * W;
+                double x2 = (lim.getLonMax() - vLonMin) / totalLon * W;
+                double y1 = (vLatMax - lim.getLatMax()) / totalLat * H;
+                double y2 = (vLatMax - lim.getLatMin()) / totalLat * H;
 
-                // Centre projeté (ancrage géographique exact)
-                double cx = (rawX1 + rawX2) / 2.0;
-                double cy = (rawY1 + rawY2) / 2.0;
+                double cx = (x1 + x2) / 2.0;
+                double cy = (y1 + y2) / 2.0;
 
-                // Taille visuelle minimale, expansion symétrique depuis le centre
-                double drawW = Math.max(rawX2 - rawX1, 65.0);
-                double drawH = Math.max(rawY2 - rawY1, 50.0);
-                double x1 = cx - drawW / 2.0;
-                double y1 = cy - drawH / 2.0;
+                // Taille proportionnelle avec plancher minimal pour la visibilité/clic
+                double drawW = Math.max(x2 - x1, 16.0);
+                double drawH = Math.max(y2 - y1, 10.0);
+                double rx1 = cx - drawW / 2.0;
+                double ry1 = cy - drawH / 2.0;
 
                 String col = ZONE_COLORS[idx % ZONE_COLORS.length];
                 String bgC = ZONE_BG[idx % ZONE_BG.length];
 
-                Rectangle rect = new Rectangle(x1, y1, drawW, drawH);
+                Rectangle rect = new Rectangle(rx1, ry1, drawW, drawH);
                 rect.setFill(Color.web(bgC, 0.65));
                 rect.setStroke(Color.web(col));
                 rect.setStrokeWidth(2.5);
@@ -880,13 +898,102 @@ public class PageZone {
                 mapPane.getChildren().add(nameLbl);
             }
         };
+    }
 
-        buildMap.run();
-        ZoneState.nbrZonesProperty().addListener((obs, o, n) -> Platform.runLater(buildMap));
-        ZoneState.setMapRefresh(buildMap);
+    // =========================================
+    // PLEIN ÉCRAN CARTE
+    // =========================================
+    private static void showFullscreenMap() {
+        Stage stage = new Stage();
+        stage.setTitle("Carte Visuelle des Zones — Plein écran");
+        stage.initModality(Modality.APPLICATION_MODAL);
 
-        card.getChildren().add(mapPane);
-        return card;
+        final double MAP_W = 2000;
+        final double MAP_H = 1100;
+
+        Pane mapPane = new Pane();
+        mapPane.setPrefSize(MAP_W, MAP_H);
+        mapPane.setMinSize(MAP_W, MAP_H);
+        mapPane.setMaxSize(MAP_W, MAP_H);
+        mapPane.setStyle("-fx-background-color: #e8f5e9;");
+
+        buildMapContent(mapPane, MAP_W, MAP_H).run();
+
+        Group zoomGroup = new Group(mapPane);
+
+        StackPane viewport = new StackPane(zoomGroup);
+        viewport.setStyle("-fx-background-color: #d4e8d4;");
+
+        // Zoom vers le curseur au scroll
+        viewport.setOnScroll(e -> {
+            double oldScale = zoomGroup.getScaleX();
+            double factor   = e.getDeltaY() > 0 ? 1.12 : 1.0 / 1.12;
+            double newScale = Math.max(0.1, Math.min(6.0, oldScale * factor));
+            double mx = e.getX() - viewport.getWidth()  / 2.0;
+            double my = e.getY() - viewport.getHeight() / 2.0;
+            zoomGroup.setScaleX(newScale);
+            zoomGroup.setScaleY(newScale);
+            zoomGroup.setTranslateX(mx - (mx - zoomGroup.getTranslateX()) * newScale / oldScale);
+            zoomGroup.setTranslateY(my - (my - zoomGroup.getTranslateY()) * newScale / oldScale);
+            e.consume();
+        });
+
+        // Déplacement par glisser-déposer
+        double[] drag = {0, 0, 0, 0};
+        viewport.setOnMousePressed(e -> {
+            drag[0] = e.getSceneX(); drag[1] = e.getSceneY();
+            drag[2] = zoomGroup.getTranslateX(); drag[3] = zoomGroup.getTranslateY();
+            viewport.setCursor(javafx.scene.Cursor.CLOSED_HAND);
+        });
+        viewport.setOnMouseDragged(e -> {
+            zoomGroup.setTranslateX(drag[2] + e.getSceneX() - drag[0]);
+            zoomGroup.setTranslateY(drag[3] + e.getSceneY() - drag[1]);
+        });
+        viewport.setOnMouseReleased(e -> viewport.setCursor(javafx.scene.Cursor.OPEN_HAND));
+        viewport.setCursor(javafx.scene.Cursor.OPEN_HAND);
+
+        // Barre inférieure
+        Button closeBtn = new Button("✕  Fermer");
+        closeBtn.setStyle(
+                "-fx-background-color: #c62828; -fx-text-fill: white; -fx-font-weight: bold;" +
+                "-fx-background-radius: 8; -fx-padding: 8 24; -fx-font-size: 13px; -fx-cursor: hand;"
+        );
+        closeBtn.setOnAction(e -> stage.close());
+
+        Label hint = new Label("Scroll pour zoomer  ·  Glisser pour déplacer  ·  Échap pour fermer");
+        hint.setStyle("-fx-text-fill: #666; -fx-font-size: 11px; -fx-font-style: italic;");
+
+        Region toolbarSpacer = new Region();
+        HBox.setHgrow(toolbarSpacer, Priority.ALWAYS);
+
+        HBox toolbar = new HBox(14, hint, toolbarSpacer, closeBtn);
+        toolbar.setAlignment(Pos.CENTER_LEFT);
+        toolbar.setPadding(new Insets(8, 16, 8, 16));
+        toolbar.setStyle("-fx-background-color: #f8fdf8; -fx-border-color: #c8e0c8; -fx-border-width: 1 0 0 0;");
+
+        BorderPane root = new BorderPane(viewport);
+        root.setBottom(toolbar);
+
+        Scene scene = new Scene(root);
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE) stage.close();
+        });
+
+        stage.setScene(scene);
+        stage.setMaximized(true);
+
+        // Ajuster l'échelle initiale pour que la carte remplisse la fenêtre
+        stage.setOnShown(e -> {
+            double vpW = viewport.getWidth();
+            double vpH = viewport.getHeight();
+            if (vpW > 0 && vpH > 0) {
+                double scale = Math.min(vpW / MAP_W, vpH / MAP_H) * 0.92;
+                zoomGroup.setScaleX(scale);
+                zoomGroup.setScaleY(scale);
+            }
+        });
+
+        stage.show();
     }
 
     // =========================================
