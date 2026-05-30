@@ -396,32 +396,38 @@ class UIFactory {
     ) {
         HBox card = new HBox();
         card.setSpacing(8);
-        card.setPadding(new Insets(12, 12, 22, 12));
+        card.setPadding(new Insets(12, 15, 12, 15));
         card.setAlignment(Pos.CENTER);
         card.getStyleClass().add("widget-card");
         card.setPrefSize(width, height);
-        card.setMinSize(width, height);
+        card.setMinSize(Math.max(width, 290), height);
         card.setMaxSize(width, height);
 
         Label titleLabel = new Label(title + " : ");
         titleLabel.getStyleClass().add("top-title");
+        titleLabel.setMinWidth(Region.USE_COMPUTED_SIZE);
 
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("top-date");
         valueLabel.textProperty().bind(value.asString());
+        valueLabel.setMinWidth(Region.USE_COMPUTED_SIZE);
 
         HBox titleRow = new HBox(5, titleLabel, valueLabel);
         titleRow.setAlignment(Pos.CENTER_LEFT);
+        titleRow.setMinWidth(Region.USE_COMPUTED_SIZE);
 
         Button btn = new Button(buttonText);
         btn.getStyleClass().add("primary-button");
+        btn.setMinWidth(145);
+        btn.setPrefHeight(36);
         btn.setOnAction(e -> action.run());
 
         Region spacer = new Region();
+        spacer.setMinWidth(10);
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox row = new HBox(16, titleRow, spacer, btn);
-        row.setAlignment(Pos.CENTER_LEFT);
+        HBox row = new HBox(0, titleRow, spacer, btn);
+        row.setAlignment(Pos.CENTER);
         row.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(row, Priority.ALWAYS);
 

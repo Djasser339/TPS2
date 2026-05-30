@@ -20,9 +20,18 @@ public class SampleData {
                 new GeographicalLimits("Zone-Bovins", 43, 44, 1, 2));
         ZoneAquacole zonePoisson = new ZoneAquacole(1003, "Zone-Poissons", TypeZone.aquacole);
 
+        ZoneElevage zoneMoutons = new ZoneElevage(1004, "Zone-Moutons", TypeZone.elevage,
+                TypeZoneElevage.Ruminant,
+                new GeographicalLimits("Zone-Moutons", 46, 48, 3, 6));
+        ZoneElevage zonePoules = new ZoneElevage(1005, "Zone-Poules", TypeZone.elevage,
+                TypeZoneElevage.Volaille,
+                new GeographicalLimits("Zone-Poules", 40, 42, -2, 1));
+
         ZoneState.addZone(zoneBle);
         ZoneState.addZone(zoneBovins);
         ZoneState.addZone(zonePoisson);
+        ZoneState.addZone(zoneMoutons);
+        ZoneState.addZone(zonePoules);
 
         // ── Cultures ───────────────────────────────────────────────────
         Cereal ble = new Cereal(FamilleCulture.Cereal,

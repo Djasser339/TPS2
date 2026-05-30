@@ -686,19 +686,18 @@ public class PageCapteurs {
         toPicker.setPromptText("Date fin");
         toPicker.setPrefWidth(148);
 
-        Button filterBtn = new Button("Filtrer");
+        Button filterBtn = new Button("🔍");
         filterBtn.getStyleClass().add("form-button");
 
         Button resetBtn = new Button("Tout afficher");
         resetBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #3B7249;" +
                           " -fx-font-size: 11px; -fx-cursor: hand;");
+        resetBtn.setMinWidth(Region.USE_PREF_SIZE);
 
-        Label fromLbl = new Label("De :");
-        fromLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
-        Label toLbl = new Label("À :");
-        toLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
+        Label arrowLbl = new Label("→");
+        arrowLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: #555;");
 
-        HBox filterRow = new HBox(8, fromLbl, fromPicker, toLbl, toPicker, filterBtn, resetBtn);
+        HBox filterRow = new HBox(8, fromPicker, arrowLbl, toPicker, filterBtn, resetBtn);
         filterRow.setAlignment(Pos.CENTER_LEFT);
 
         VBox histBox = new VBox(4);

@@ -277,14 +277,28 @@ class ZoneState {
     private static final IntegerProperty nbrZoneAquacole =
             new SimpleIntegerProperty(0);
 
+    // Incrémenté à chaque appel de refresh() pour notifier les charts même
+    // quand le nombre de zones ne change pas (ex : affectation d'entités)
+    private static final IntegerProperty zoneEntityRevision =
+            new SimpleIntegerProperty(0);
+
     // =========================
     // REFRESH HOOK
     // =========================
     private static Runnable zoneRefresh;
     private static Runnable productionRefresh;
+    private static Runnable mapRefresh;
 
     public static void setZoneRefresh(Runnable r) {
         zoneRefresh = r;
+    }
+
+    public static void setMapRefresh(Runnable r) {
+        mapRefresh = r;
+    }
+
+    public static void refreshMap() {
+        if (mapRefresh != null) Platform.runLater(mapRefresh);
     }
 
     public static void refreshZones() {
@@ -293,11 +307,13 @@ class ZoneState {
 
     public static void refresh() {
         nbrZones.set(zones.size());
+        zoneEntityRevision.set(zoneEntityRevision.get() + 1);
     }
 
 
     public static void notifyRefresh() {
         if (zoneRefresh != null) zoneRefresh.run();
+        refreshMap();
     }
 
     // =========================
@@ -317,21 +333,11 @@ class ZoneState {
     // =========================
     // PROPERTIES
     // =========================
-    public static IntegerProperty nbrZonesProperty() {
-        return nbrZones;
-    }
-
-    public static IntegerProperty nbrZoneCultureProperty() {
-        return nbrZoneCulture;
-    }
-
-    public static IntegerProperty nbrZoneElevageProperty() {
-        return nbrZoneElevage;
-    }
-
-    public static IntegerProperty nbrZoneAquacoleProperty() {
-        return nbrZoneAquacole;
-    }
+    public static IntegerProperty nbrZonesProperty()        { return nbrZones; }
+    public static IntegerProperty nbrZoneCultureProperty()  { return nbrZoneCulture; }
+    public static IntegerProperty nbrZoneElevageProperty()  { return nbrZoneElevage; }
+    public static IntegerProperty nbrZoneAquacoleProperty() { return nbrZoneAquacole; }
+    public static IntegerProperty zoneEntityRevisionProperty() { return zoneEntityRevision; }
 
     // =========================
     // ADD ZONE

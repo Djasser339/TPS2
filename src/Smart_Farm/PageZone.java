@@ -70,7 +70,7 @@ public class PageZone {
         // =========================
 
         center.getChildren().add(
-                UIFactory.createAnimatedTitle("\uD83C\uDFDE\uFE0F Vue d'ensemble des Zones ( clicker pour modifier ou desactiver )")
+                UIFactory.createAnimatedTitle("Vue d'ensemble des Zones ( cliquer pour modifier ou d\u00E9sactiver )")
         );
 
         List<String> headers = List.of(
@@ -158,7 +158,7 @@ public class PageZone {
         // CARTE VISUELLE DES ZONES
         // =========================
         center.getChildren().add(
-                UIFactory.createAnimatedTitle("🗺️ Carte Visuelle des Zones")
+                UIFactory.createAnimatedTitle("Carte Visuelle des Zones")
         );
         center.getChildren().add(createZoneMapCard());
 
@@ -740,8 +740,8 @@ public class PageZone {
     // =========================================
     private static VBox createZoneMapCard() {
 
-        final double W = 680;
-        final double H = 340;
+        final double W = 920;
+        final double H = 480;
 
         VBox card = new VBox(10);
         card.setPadding(new Insets(20));
@@ -758,6 +758,8 @@ public class PageZone {
                 "-fx-border-radius: 8;" +
                 "-fx-background-radius: 8;"
         );
+        // Clip : empêche les grandes zones de déborder visuellement hors de la carte
+        mapPane.setClip(new Rectangle(W, H));
 
         String[] ZONE_COLORS = {"#e65100","#1565C0","#6a1b9a","#00695c","#c62828","#f57f17"};
         String[] ZONE_BG     = {"#fff8e1","#e3f2fd","#f3e5f5","#e0f2f1","#ffebee","#fffde7"};
@@ -769,6 +771,7 @@ public class PageZone {
                     .filter(z -> z instanceof ZoneElevage)
                     .map(z -> (ZoneElevage) z)
                     .filter(z -> z.getLimitZone() != null)
+                    .filter(z -> z.getStatut() == StatutZone.ACTIVE)
                     .collect(java.util.stream.Collectors.toList());
 
             if (elevZones.isEmpty()) {
@@ -781,20 +784,22 @@ public class PageZone {
                 return;
             }
 
-            double minLat = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLatMin()).min().orElse(-10);
-            double maxLat = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLatMax()).max().orElse(10);
-            double minLon = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLonMin()).min().orElse(-10);
-            double maxLon = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLonMax()).max().orElse(10);
+            // Viewport basé sur l'étendue des CENTRES (garantit la visibilité de tous les centres).
+            // Contrairement aux extents, les centres ne sont pas gonflés par de grandes zones.
+            double minCLat = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLatMin()  + z.getLimitZone().getLatMax())  / 2.0).min().orElse(40);
+            double maxCLat = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLatMin()  + z.getLimitZone().getLatMax())  / 2.0).max().orElse(46);
+            double minCLon = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLonMin()  + z.getLimitZone().getLonMax())  / 2.0).min().orElse(-5);
+            double maxCLon = elevZones.stream().mapToDouble(z -> (z.getLimitZone().getLonMin()  + z.getLimitZone().getLonMax())  / 2.0).max().orElse(10);
 
-            double latRange = Math.max(maxLat - minLat, 0.5);
-            double lonRange = Math.max(maxLon - minLon, 0.5);
-            double latPad   = latRange * 0.4;
-            double lonPad   = lonRange * 0.4;
+            double latSpread = Math.max(maxCLat - minCLat, 2.0);
+            double lonSpread = Math.max(maxCLon - minCLon, 2.0);
+            double latPad    = latSpread * 0.4;
+            double lonPad    = lonSpread * 0.4;
 
-            final double vLatMin = minLat - latPad;
-            final double vLatMax = maxLat + latPad;
-            final double vLonMin = minLon - lonPad;
-            final double vLonMax = maxLon + lonPad;
+            final double vLatMin = minCLat - latPad;
+            final double vLatMax = maxCLat + latPad;
+            final double vLonMin = minCLon - lonPad;
+            final double vLonMax = maxCLon + lonPad;
             final double totalLat = vLatMax - vLatMin;
             final double totalLon = vLonMax - vLonMin;
 
@@ -833,15 +838,26 @@ public class PageZone {
                 ZoneElevage ze = elevZones.get(idx);
                 GeographicalLimits lim = ze.getLimitZone();
 
-                double x1 = (lim.getLonMin() - vLonMin) / totalLon * W;
-                double x2 = (lim.getLonMax() - vLonMin) / totalLon * W;
-                double y1 = (vLatMax - lim.getLatMax()) / totalLat * H;
-                double y2 = (vLatMax - lim.getLatMin()) / totalLat * H;
+                // Projection géographique brute
+                double rawX1 = (lim.getLonMin() - vLonMin) / totalLon * W;
+                double rawX2 = (lim.getLonMax() - vLonMin) / totalLon * W;
+                double rawY1 = (vLatMax - lim.getLatMax()) / totalLat * H;
+                double rawY2 = (vLatMax - lim.getLatMin()) / totalLat * H;
+
+                // Centre projeté (ancrage géographique exact)
+                double cx = (rawX1 + rawX2) / 2.0;
+                double cy = (rawY1 + rawY2) / 2.0;
+
+                // Taille visuelle minimale, expansion symétrique depuis le centre
+                double drawW = Math.max(rawX2 - rawX1, 65.0);
+                double drawH = Math.max(rawY2 - rawY1, 50.0);
+                double x1 = cx - drawW / 2.0;
+                double y1 = cy - drawH / 2.0;
 
                 String col = ZONE_COLORS[idx % ZONE_COLORS.length];
                 String bgC = ZONE_BG[idx % ZONE_BG.length];
 
-                Rectangle rect = new Rectangle(x1, y1, Math.max(x2 - x1, 30), Math.max(y2 - y1, 30));
+                Rectangle rect = new Rectangle(x1, y1, drawW, drawH);
                 rect.setFill(Color.web(bgC, 0.65));
                 rect.setStroke(Color.web(col));
                 rect.setStrokeWidth(2.5);
@@ -849,9 +865,6 @@ public class PageZone {
                 rect.setCursor(javafx.scene.Cursor.HAND);
                 rect.setOnMouseClicked(e -> showZoneEditForm(ze));
                 mapPane.getChildren().add(rect);
-
-                double cx = (x1 + x2) / 2;
-                double cy = (y1 + y2) / 2;
 
                 Label nameLbl = new Label(ze.getNom());
                 nameLbl.setStyle(
@@ -870,6 +883,7 @@ public class PageZone {
 
         buildMap.run();
         ZoneState.nbrZonesProperty().addListener((obs, o, n) -> Platform.runLater(buildMap));
+        ZoneState.setMapRefresh(buildMap);
 
         card.getChildren().add(mapPane);
         return card;

@@ -547,6 +547,7 @@ public class PageDashboard {
 
         refresh.run();
         ZoneState.nbrZonesProperty().addListener((o, v, n) -> Platform.runLater(refresh));
+        ZoneState.zoneEntityRevisionProperty().addListener((o, v, n) -> Platform.runLater(refresh));
         return chart;
     }
 
