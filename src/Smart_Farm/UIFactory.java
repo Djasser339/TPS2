@@ -417,10 +417,15 @@ class UIFactory {
         btn.getStyleClass().add("primary-button");
         btn.setOnAction(e -> action.run());
 
-        VBox content = new VBox(8, titleRow, btn);
-        content.setAlignment(Pos.CENTER);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        card.getChildren().add(content);
+        HBox row = new HBox(16, titleRow, spacer, btn);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(row, Priority.ALWAYS);
+
+        card.getChildren().add(row);
         applyHoverEffect(card);
         return card;
     }

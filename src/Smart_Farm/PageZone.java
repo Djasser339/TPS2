@@ -17,7 +17,6 @@ import javafx.stage.Stage;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static Smart_Farm.UIFactory.createActionButton;
 
@@ -246,7 +245,7 @@ public class PageZone {
         val1.textProperty().bind(value1.asString());
         val1.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2E5E3B;");
 
-        Button btn1 = createActionButton(">> Affecter Culture", () -> {});
+        Button btn1 = createActionButton("+ Affecter Culture", () -> {});
         btn1.setMaxWidth(Double.MAX_VALUE);
         btn1.setOnAction(e -> showAssignToZoneForm(
                 "Affecter Culture",
@@ -280,7 +279,7 @@ public class PageZone {
         val2.textProperty().bind(value2.asString());
         val2.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2E5E3B;");
 
-        Button btn2 = createActionButton(">> Affecter Animal", () -> {});
+        Button btn2 = createActionButton("+ Affecter Animal", () -> {});
         btn2.setMaxWidth(Double.MAX_VALUE);
         btn2.setOnAction(e -> showAssignToZoneForm(
                 "Affecter Animal",
@@ -737,7 +736,7 @@ public class PageZone {
     }
 
     // =========================================
-    // CARTE GEOGRAPHIQUE DES ZONES ELEVAGE
+    // CARTE VISUELLE DES ZONES
     // =========================================
     private static VBox createZoneMapCard() {
 
@@ -747,9 +746,6 @@ public class PageZone {
         VBox card = new VBox(10);
         card.setPadding(new Insets(20));
         card.getStyleClass().add("culture-list-card");
-
-        Label hint = new Label("Zones d'élevage avec coordonnées géographiques (cliquer pour éditer)");
-        hint.setStyle("-fx-font-size: 11px; -fx-text-fill: #777;");
 
         Pane mapPane = new Pane();
         mapPane.setPrefSize(W, H);
@@ -763,8 +759,8 @@ public class PageZone {
                 "-fx-background-radius: 8;"
         );
 
-        String[] ZONE_COLORS  = {"#e65100","#1565C0","#6a1b9a","#00695c","#c62828","#f57f17"};
-        String[] ZONE_BG      = {"#fff8e1","#e3f2fd","#f3e5f5","#e0f2f1","#ffebee","#fffde7"};
+        String[] ZONE_COLORS = {"#e65100","#1565C0","#6a1b9a","#00695c","#c62828","#f57f17"};
+        String[] ZONE_BG     = {"#fff8e1","#e3f2fd","#f3e5f5","#e0f2f1","#ffebee","#fffde7"};
 
         Runnable buildMap = () -> {
             mapPane.getChildren().clear();
@@ -773,10 +769,10 @@ public class PageZone {
                     .filter(z -> z instanceof ZoneElevage)
                     .map(z -> (ZoneElevage) z)
                     .filter(z -> z.getLimitZone() != null)
-                    .collect(Collectors.toList());
+                    .collect(java.util.stream.Collectors.toList());
 
             if (elevZones.isEmpty()) {
-                Label none = new Label("Aucune zone d'élevage avec coordonnées géographiques.\nAjoutez une zone Elevage pour la voir apparaître ici.");
+                Label none = new Label("Aucune zone d'élevage avec coordonnées.\nAjoutez une zone Elevage pour la voir apparaître ici.");
                 none.setStyle("-fx-text-fill: #888; -fx-font-size: 13px;");
                 none.setWrapText(true);
                 none.setLayoutX(W / 2 - 200);
@@ -785,7 +781,6 @@ public class PageZone {
                 return;
             }
 
-            // Compute bounding box across all zones
             double minLat = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLatMin()).min().orElse(-10);
             double maxLat = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLatMax()).max().orElse(10);
             double minLon = elevZones.stream().mapToDouble(z -> z.getLimitZone().getLonMin()).min().orElse(-10);
@@ -803,7 +798,6 @@ public class PageZone {
             final double totalLat = vLatMax - vLatMin;
             final double totalLon = vLonMax - vLonMin;
 
-            // Grid lines
             int nX = 6, nY = 5;
             for (int i = 0; i <= nX; i++) {
                 double lon = vLonMin + i * totalLon / nX;
@@ -812,7 +806,7 @@ public class PageZone {
                 vl.setStroke(Color.color(0.3, 0.55, 0.3, 0.22));
                 vl.setStrokeWidth(1);
                 mapPane.getChildren().add(vl);
-                Label gl = new Label(String.format("%.2f°", lon));
+                Label gl = new Label(String.format("%.1f°", lon));
                 gl.setStyle("-fx-font-size: 9px; -fx-text-fill: #6a9a6a;");
                 gl.setLayoutX(x + 2); gl.setLayoutY(H - 14);
                 mapPane.getChildren().add(gl);
@@ -824,19 +818,17 @@ public class PageZone {
                 hl.setStroke(Color.color(0.3, 0.55, 0.3, 0.22));
                 hl.setStrokeWidth(1);
                 mapPane.getChildren().add(hl);
-                Label gl = new Label(String.format("%.2f°", lat));
+                Label gl = new Label(String.format("%.1f°", lat));
                 gl.setStyle("-fx-font-size: 9px; -fx-text-fill: #6a9a6a;");
                 gl.setLayoutX(2); gl.setLayoutY(y - 12);
                 mapPane.getChildren().add(gl);
             }
 
-            // Compass rose (top-right corner)
             Label compass = new Label("N");
             compass.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #3B7249;");
             compass.setLayoutX(W - 22); compass.setLayoutY(4);
             mapPane.getChildren().add(compass);
 
-            // Draw each zone as a rectangle
             for (int idx = 0; idx < elevZones.size(); idx++) {
                 ZoneElevage ze = elevZones.get(idx);
                 GeographicalLimits lim = ze.getLimitZone();
@@ -846,10 +838,10 @@ public class PageZone {
                 double y1 = (vLatMax - lim.getLatMax()) / totalLat * H;
                 double y2 = (vLatMax - lim.getLatMin()) / totalLat * H;
 
-                String col  = ZONE_COLORS[idx % ZONE_COLORS.length];
-                String bgC  = ZONE_BG[idx % ZONE_BG.length];
+                String col = ZONE_COLORS[idx % ZONE_COLORS.length];
+                String bgC = ZONE_BG[idx % ZONE_BG.length];
 
-                Rectangle rect = new Rectangle(x1, y1, Math.max(x2 - x1, 6), Math.max(y2 - y1, 6));
+                Rectangle rect = new Rectangle(x1, y1, Math.max(x2 - x1, 30), Math.max(y2 - y1, 30));
                 rect.setFill(Color.web(bgC, 0.65));
                 rect.setStroke(Color.web(col));
                 rect.setStrokeWidth(2.5);
@@ -858,40 +850,28 @@ public class PageZone {
                 rect.setOnMouseClicked(e -> showZoneEditForm(ze));
                 mapPane.getChildren().add(rect);
 
-                // Zone name badge
                 double cx = (x1 + x2) / 2;
                 double cy = (y1 + y2) / 2;
+
                 Label nameLbl = new Label(ze.getNom());
                 nameLbl.setStyle(
                         "-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: white;" +
-                        "-fx-background-color: " + col + "; -fx-padding: 2 7;" +
+                        "-fx-background-color: " + col + "; -fx-padding: 3 8;" +
                         "-fx-background-radius: 5; -fx-cursor: hand;"
                 );
-                nameLbl.setLayoutX(cx - 40);
-                nameLbl.setLayoutY(cy - 10);
+                nameLbl.setMaxWidth(120);
+                nameLbl.setWrapText(true);
+                nameLbl.setLayoutX(cx - 55);
+                nameLbl.setLayoutY(cy - 12);
                 nameLbl.setOnMouseClicked(e -> showZoneEditForm(ze));
                 mapPane.getChildren().add(nameLbl);
-
-                // Type sub-label
-                Label typeLbl = new Label(ze.getTypeZoneElevage().name() + " | " + ze.getNbrEntite() + " anim.");
-                typeLbl.setStyle("-fx-font-size: 9px; -fx-text-fill: " + col + "; -fx-font-weight: bold;");
-                typeLbl.setLayoutX(cx - 35);
-                typeLbl.setLayoutY(cy + 12);
-                mapPane.getChildren().add(typeLbl);
-
-                // Corner coordinates
-                Label coordLbl = new Label(
-                        String.format("%.1f,%.1f", lim.getLatMin(), lim.getLonMin()));
-                coordLbl.setStyle("-fx-font-size: 8px; -fx-text-fill: #888;");
-                coordLbl.setLayoutX(x1 + 2); coordLbl.setLayoutY(y2 - 12);
-                mapPane.getChildren().add(coordLbl);
             }
         };
 
         buildMap.run();
         ZoneState.nbrZonesProperty().addListener((obs, o, n) -> Platform.runLater(buildMap));
 
-        card.getChildren().addAll(hint, mapPane);
+        card.getChildren().add(mapPane);
         return card;
     }
 

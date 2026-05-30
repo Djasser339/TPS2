@@ -89,7 +89,7 @@ public class PageCapteurs {
         center.getChildren().add(dashboardHolder[0]);
 
         Timeline dashboardRefresh = new Timeline(
-                new KeyFrame(Duration.seconds(10), e -> {
+                new KeyFrame(Duration.seconds(2), e -> {
                     int idx = center.getChildren().indexOf(dashboardHolder[0]);
                     dashboardHolder[0] = createZoneDashboard();
                     if (idx >= 0) center.getChildren().set(idx, dashboardHolder[0]);

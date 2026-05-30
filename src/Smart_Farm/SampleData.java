@@ -1,11 +1,7 @@
 package Smart_Farm;
 
-/**
- * Demo data for testing capteurs and alertes.
- *
- * To remove all sample data: set ENABLED = false and relaunch.
- * The rest of the app works identically with only real data.
- */
+import java.time.LocalDate;
+
 public class SampleData {
 
     // ── Toggle ─────────────────────────────────────────────────────────
@@ -27,6 +23,24 @@ public class SampleData {
         ZoneState.addZone(zoneBle);
         ZoneState.addZone(zoneBovins);
         ZoneState.addZone(zonePoisson);
+
+        // ── Cultures ───────────────────────────────────────────────────
+        Cereal ble = new Cereal(FamilleCulture.Cereal,
+                LocalDate.of(2026, 3, 1), LocalDate.of(2026, 7, 15),
+                new Seuil(6.0, 7.5), new Seuil(50, 70));
+        Legume tomate = new Legume(FamilleCulture.Legume,
+                LocalDate.of(2026, 4, 10), LocalDate.of(2026, 8, 20),
+                new Seuil(6.0, 7.0), new Seuil(60, 80));
+        FarmState.addCulture(ble);
+        FarmState.addCulture(tomate);
+
+        // ── Animaux ────────────────────────────────────────────────────
+        Ruminant bovin = new Ruminant(TypeEspece.ruminant, "Bessie");
+        bovin.setAge(4); bovin.setPoid(520);
+        Volaille poule = new Volaille(TypeEspece.volaille, "Coco");
+        poule.setAge(1); poule.setPoid(3);
+        AnimalState.addAnimal(bovin);
+        AnimalState.addAnimal(poule);
 
         // ── Capteurs — Zone-Ble ────────────────────────────────────────
         // Narrow thresholds so random readings reliably produce alerts
