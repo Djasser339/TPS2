@@ -1,8 +1,9 @@
 package Smart_Farm;// ==================== HISTORIQUE PRODUCTION ====================
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
-class HistoriqueProd {
+class HistoriqueProd implements Serializable {
     private LocalDate date;
     private double quantite;
     private String unite;
@@ -28,7 +29,8 @@ class HistoriqueProd {
 
 // ==================== ENREGISTREMENT PRODUCTION ====================
 
-class EnregistrementProduction {
+class EnregistrementProduction implements Serializable {
+    private static final long serialVersionUID = 1L;
     private LocalDate date;
     private double quantite;
     private String typeProduction;

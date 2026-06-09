@@ -81,17 +81,18 @@ class UIFactory {
         // BUTTONS
         // =================================
 
-        Button dashBtn    = createNavButton("🏠 Tableau de Bord");
-        Button zoneBtn    = createNavButton("🌍 Zones");
-        Button cultureBtn = createNavButton("🌱 Cultures");
-        Button animalBtn  = createNavButton("🐄 Animaux");
-        Button capteurBtn = createNavButton("📡 Capteurs");
-        Button alertBtn   = createNavButton("🚨 Alertes");
+        Button dashBtn       = createNavButton("🏠 Tableau de Bord");
+        Button zoneBtn       = createNavButton("🌍 Zones");
+        Button cultureBtn    = createNavButton("🌱 Cultures");
+        Button animalBtn     = createNavButton("🐄 Animaux");
+        Button capteurBtn    = createNavButton("📡 Capteurs");
+        Button alertBtn      = createNavButton("🚨 Alertes");
+        Button commercialBtn = createNavButton("💼 Commercial");
 
         // =================================
         // ACTIVE STATE TRACKING
         // =================================
-        List<Button> navBtns = List.of(dashBtn, zoneBtn, cultureBtn, animalBtn, capteurBtn, alertBtn);
+        List<Button> navBtns = List.of(dashBtn, zoneBtn, cultureBtn, animalBtn, capteurBtn, alertBtn, commercialBtn);
         Consumer<Button> activate = btn -> {
             navBtns.forEach(b -> b.getStyleClass().remove("nav-button-active"));
             btn.getStyleClass().add("nav-button-active");
@@ -137,14 +138,22 @@ class UIFactory {
             root.setTop(createTopBar("Gestion des Alertes", "Smart Farm", bellNode));
         });
 
+        commercialBtn.setOnAction(e -> {
+            activate.accept(commercialBtn);
+            root.setCenter(Pages.commercialPage());
+            root.setTop(createTopBar("Gestion Commerciale", "Smart Farm", bellNode));
+        });
+
         // Dashboard is the default page — mark it active immediately
         dashBtn.getStyleClass().add("nav-button-active");
 
         // =================================
-        // SECTION HEADER
+        // SECTION HEADERS
         // =================================
-        Label navSection = new Label("NAVIGATION");
+        Label navSection        = new Label("NAVIGATION");
         navSection.getStyleClass().add("nav-section-label");
+        Label commercialSection = new Label("COMMERCIAL");
+        commercialSection.getStyleClass().add("nav-section-label");
 
         navBar.getChildren().addAll(
                 navSection,
@@ -153,7 +162,9 @@ class UIFactory {
                 cultureBtn,
                 animalBtn,
                 capteurBtn,
-                alertBtn
+                alertBtn,
+                commercialSection,
+                commercialBtn
         );
 
         return navBar;

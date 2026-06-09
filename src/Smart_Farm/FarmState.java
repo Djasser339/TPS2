@@ -648,7 +648,6 @@ class ZoneState {
                 z.getType().toString(),
                 String.valueOf(p.getDate()),
                 description,
-                String.format("%.4f", p.getQuantite()),
                 unite
         );
     }
@@ -979,6 +978,9 @@ class SmartFarmPersistence {
             out.writeObject(FarmState.getCultures());
             out.writeObject(AnimalState.getAnimals());
             out.writeObject(AlerteState.getAlertesActives());
+            // Commercial data — written last for backward compatibility
+            out.writeObject(CommercialState.getClientsForSave());
+            out.writeObject(CommercialState.getVentesForSave());
 
             System.out.println("✔ SAVE OK");
 
@@ -1014,6 +1016,15 @@ class SmartFarmPersistence {
             FarmState.restore(cultures);
             AnimalState.restore(animals);
             AlerteState.restore(alertes);
+
+            // Commercial data — old save files silently skip this block
+            try {
+                List<Client> clients = (List<Client>) in.readObject();
+                List<Vente>  ventes  = (List<Vente>)  in.readObject();
+                CommercialState.restore(clients, ventes);
+            } catch (Exception ignored) {
+                // Pre-commercial save file — start with empty commercial data
+            }
 
             System.out.println("✔ LOAD OK");
 

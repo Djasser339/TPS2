@@ -84,5 +84,34 @@ public class SampleData {
 
         ZoneState.refresh();
         AlerteState.updateStats();
+
+        // ── Initial production stock (so commercial demo works on first launch) ──
+        zoneBle.enregistrerProduction(620.0, "kg cultures");
+        zoneBle.enregistrerProduction(380.5, "kg cultures");
+        zoneBovins.enregistrerProduction(210.0, "litres lait");
+        zoneBovins.enregistrerProduction(175.5, "litres lait");
+        zoneMoutons.enregistrerProduction(148.0, "litres lait");
+        zonePoules.enregistrerProduction(450.0, "unité oeufs");
+        zonePoules.enregistrerProduction(310.0, "unité oeufs");
+        zonePoisson.enregistrerProduction(95.0,  "kg aquacole");
+
+        // ── Sample clients ──────────────────────────────────────────────
+        Client c1 = new Client("Benali",    "Karim",   "k.benali@email.dz",    "0550 123 456", "Alger, Bab El Oued");
+        Client c2 = new Client("Meziane",   "Fatima",  "f.meziane@email.dz",   "0661 789 012", "Oran, Bir El Djir");
+        Client c3 = new Client("Hadji",     "Youcef",  "y.hadji@email.dz",     "0770 345 678", "Constantine, El Khroub");
+        Client c4 = new Client("Boudaoud",  "Samira",  "s.boudaoud@email.dz",  "0555 901 234", "Blida, Ouled Yaich");
+        CommercialState.addClient(c1);
+        CommercialState.addClient(c2);
+        CommercialState.addClient(c3);
+        CommercialState.addClient(c4);
+
+        // ── Sample ventes (all within available stock) ──────────────────
+        CommercialState.addVente(new Vente(c1.getId(), "Zone-Ble",     "kg cultures",  200.0, 45.0,  "Livraison directe"));
+        CommercialState.addVente(new Vente(c2.getId(), "Zone-Bovins",  "litres lait",   80.0, 120.0, "Marché local Oran"));
+        CommercialState.addVente(new Vente(c3.getId(), "Zone-Poules",  "unité oeufs",  150.0,  18.0, "Restaurant Constantine"));
+        CommercialState.addVente(new Vente(c1.getId(), "Zone-Ble",     "kg cultures",  100.0, 47.0,  "2ème commande"));
+        CommercialState.addVente(new Vente(c4.getId(), "Zone-Moutons", "litres lait",   60.0, 130.0, ""));
+        CommercialState.addVente(new Vente(c2.getId(), "Zone-Poissons","kg aquacole",   30.0, 850.0, "Poissonnerie Oran"));
+        CommercialState.addVente(new Vente(c3.getId(), "Zone-Bovins",  "litres lait",   40.0, 125.0, ""));
     }
 }

@@ -40,4 +40,8 @@ public class Pages {
 
         return PageAlertes.alertePage();
     }
+
+    public static ScrollPane commercialPage() {
+        return PageCommercial.commercialPage();
+    }
 }
