@@ -2,12 +2,13 @@ package Smart_Farm;
 
 // ==================== CULTURE ====================
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-abstract class Culture {
+abstract class Culture implements Serializable {
     private FamilleCulture famille;
     private LocalDate datePlantation;
     private LocalDate dateRecolte;
@@ -85,7 +86,7 @@ abstract class Culture {
     }
 }
 
-class Cereal extends Culture {
+class Cereal extends Culture implements Serializable  {
     private List<String> cultures = new ArrayList<>();
     static int Nbr;
 
@@ -105,7 +106,7 @@ class Cereal extends Culture {
     public void removeCultures(String culture) { cultures.remove(culture); }
 }
 
-class Legume extends Culture {
+class Legume extends Culture implements Serializable {
     private List<String> cultures = new ArrayList<>();
     static int Nbr;
 
@@ -125,7 +126,7 @@ class Legume extends Culture {
     public void removeCultures(String culture) { cultures.remove(culture); }
 }
 
-class Fruit extends Culture {
+class Fruit extends Culture implements Serializable {
     private List<String> cultures = new ArrayList<>();
     static int Nbr;
 

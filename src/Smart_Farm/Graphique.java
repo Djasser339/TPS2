@@ -2,9 +2,10 @@ package Smart_Farm;
 
 // ==================== VISUALISATION GRAPHIQUE ====================
 
+import java.io.Serializable;
 import java.util.List;
 
-class Graphique {
+class Graphique implements Serializable {
     public static void afficherEvolutionReleves(Capteur capteur) {
         List<Releve> releves = capteur.getHistoriqueReleves();
         System.out.println("=== Graphique : Capteur " + capteur.getId() + " ===");

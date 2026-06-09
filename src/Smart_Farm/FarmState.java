@@ -1,4 +1,7 @@
-﻿package Smart_Farm;
+package Smart_Farm;
+
+import java.io.*;
+
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
@@ -22,6 +25,18 @@ import java.util.Random;
 import static Smart_Farm.StadeCroissance.*;
 
 public class FarmState {
+
+    public static void restore(List<Culture> data) {
+
+        cultures.clear();
+        cultures.addAll(data);
+
+        updateStats();
+
+        if (cultureRefresh != null) {
+            cultureRefresh.run();
+        }
+    }
 
     private static Runnable cultureRefresh;
 
@@ -145,6 +160,19 @@ public class FarmState {
 
 class AnimalState {
 
+    public static void restore(List<Animal> data) {
+
+        animals.clear();
+        animals.addAll(data);
+
+        nbrAnimals.set(animals.size());
+        nbrRuminants.set((int) animals.stream().filter(a -> a instanceof Ruminant).count());
+        nbrVolaille.set((int) animals.stream().filter(a -> a instanceof Volaille).count());
+        nbrAquacole.set((int) animals.stream().filter(a -> a instanceof Aquacole).count());
+
+        refreshAnimals();
+    }
+
     // =========================
     // LISTE PRINCIPALE
     // =========================
@@ -254,6 +282,21 @@ class AnimalState {
 
 
 class ZoneState {
+
+    public static void restore(List<Zone> data) {
+
+        zones.clear();
+        zones.addAll(data);
+
+        // recalcul des stats
+        nbrZones.set(zones.size());
+        nbrZoneCulture.set((int) zones.stream().filter(z -> z instanceof ZoneCulture).count());
+        nbrZoneElevage.set((int) zones.stream().filter(z -> z instanceof ZoneElevage).count());
+        nbrZoneAquacole.set((int) zones.stream().filter(z -> z instanceof ZoneAquacole).count());
+
+        // refresh UI
+        notifyRefresh();
+    }
 
 
 
@@ -430,6 +473,24 @@ class ZoneState {
         return z.getNbrEntite();
     }
 
+    public static void setZoneStatut(Zone z, StatutZone nouveauStatut) {
+
+        if (z == null) return;
+
+        z.setStatut(nouveauStatut);
+
+        // propagation automatique vers capteurs
+        if (nouveauStatut == StatutZone.SUSPENDU) {
+            CapteurState.suspendAllFromZone(z);
+        }
+        else if (nouveauStatut == StatutZone.ACTIVE) {
+            CapteurState.activateAllFromZone(z);
+        }
+
+        notifyRefresh();
+        CapteurState.refreshCapteurs();
+    }
+
 // =========================
 // RANDOM + CONFIG
 // =========================
@@ -450,36 +511,27 @@ class ZoneState {
 // =========================
 // SIMULATION PRODUCTION
 // =========================
+    private static final Map<Zone, Timeline> timelines = new HashMap<>();
 
     public static void startProductionSimulation(Zone zone) {
 
-        System.out.println("[DEBUG] startProductionSimulation CALLED for: " + zone.getNom());
+        if (zone == null) return;
 
-        if (zone == null) {
-            System.out.println("[ERROR] zone = null");
-            return;
+        // si déjà une timeline -> stop ancien
+        if (timelines.containsKey(zone)) {
+            timelines.get(zone).stop();
         }
-
-        if (runningZones.contains(zone)) {
-            System.out.println("[DEBUG] Timeline already running for: " + zone.getNom());
-            return;
-        }
-
-        runningZones.add(zone);
 
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.seconds(PRODUCTION_INTERVAL), e -> {
 
-                    System.out.println("[DEBUG] TIMER TICK -> " + zone.getNom());
-
-                    if (zone.getNbrEntite() <= 0) {
-                        System.out.println("[WARN] No entities in zone: " + zone.getNom());
-                        return;
+                    // 🔥 CHECK STATUT À CHAQUE TICK
+                    if (zone.getStatut() != StatutZone.ACTIVE) {
+                        return; // ou ignore production
                     }
 
-                    // =========================
-                    // CALCUL
-                    // =========================
+                    if (zone.getNbrEntite() <= 0) return;
+
                     double t = System.currentTimeMillis() / 1000.0;
                     double variation = 0.8 + Math.abs(Math.sin(t / 20));
 
@@ -490,53 +542,30 @@ class ZoneState {
 
                     rendement = Math.round(rendement * 10.0) / 10.0;
 
-                    // =========================
-                    // TYPE
-                    // =========================
                     String typeProduction;
 
                     if (zone instanceof ZoneCulture) {
                         typeProduction = "kg cultures";
                     }
                     else if (zone instanceof ZoneElevage ze) {
-
-                        if (ze.getTypeZoneElevage() == TypeZoneElevage.Ruminant) {
-                            typeProduction = "litres lait";
-                        } else {
-                            typeProduction = "unité oeufs";
-                        }
+                        typeProduction = (ze.getTypeZoneElevage() == TypeZoneElevage.Ruminant)
+                                ? "litres lait"
+                                : "unité oeufs";
                     }
                     else {
                         typeProduction = "kg aquacole";
                     }
 
-                    System.out.println("[DEBUG] GENERATED PROD: " + rendement + " " + typeProduction);
-
-                    // =========================
-                    // SAVE
-                    // =========================
                     zone.enregistrerProduction(rendement, typeProduction);
 
-                    System.out.println("[DEBUG] PRODUCTIONS SIZE = " + zone.getProductions().size());
-
-                    // =========================
-                    // REFRESH UI
-                    // =========================
-                    if (productionRefresh == null) {
-                        System.out.println("[ERROR] productionRefresh is NULL ");
-                    } else {
-                        System.out.println("[DEBUG] calling refreshProduction()");
-                        refreshProduction();
-                    }
-
-                    System.out.println("[DEBUG] END TICK " + zone.getNom());
+                    refreshProduction();
                 })
         );
 
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
-        System.out.println("[DEBUG] Timeline STARTED for: " + zone.getNom());
+        timelines.put(zone, timeline);
     }
 
 // =========================
@@ -719,6 +748,22 @@ class ZoneState {
 
 class CapteurState {
 
+    public static void restore(List<Capteur> data) {
+
+        capteurs.clear();
+        capteurs.addAll(data);
+
+        updateStats();
+
+        // important : réenregistrer dans gestionnaire alertes
+        GestionnaireCapteursAlertes instance = GestionnaireCapteursAlertes.getInstance();
+        for (Capteur c : capteurs) {
+            instance.ajouterCapteur(c);
+        }
+
+        refreshCapteurs();
+    }
+
     private static final List<Capteur> capteurs = new ArrayList<>();
 
     private static final IntegerProperty nbrCapteurs    = new SimpleIntegerProperty(0);
@@ -728,8 +773,13 @@ class CapteurState {
 
     private static Runnable capteurRefresh;
 
-    public static void setCapteurRefresh(Runnable r) { capteurRefresh = r; }
-    public static void refreshCapteurs() { if (capteurRefresh != null) capteurRefresh.run(); }
+    public static void setCapteurRefresh(Runnable r) {
+        capteurRefresh = r;
+    }
+
+    public static void refreshCapteurs() {
+        if (capteurRefresh != null) capteurRefresh.run();
+    }
 
     public static IntegerProperty nbrCapteursProperty()    { return nbrCapteurs; }
     public static IntegerProperty nbrActifsProperty()      { return nbrActifs; }
@@ -757,7 +807,9 @@ class CapteurState {
 
     public static List<Capteur> searchCapteur(String query) {
         if (query == null || query.isEmpty()) return capteurs;
+
         String q = query.toLowerCase();
+
         return capteurs.stream()
                 .filter(c -> c.getId().toLowerCase().contains(q)
                         || c.getTypeNom().toLowerCase().contains(q)
@@ -767,14 +819,23 @@ class CapteurState {
     }
 
     public static List<String> mapCapteur(Capteur c) {
+
         List<Releve> hist = c.getHistoriqueReleves();
-        String dernierReleve = hist.isEmpty() ? "—" : hist.get(hist.size() - 1).getValeurAsString();
-        String niveau = hist.isEmpty() ? "—" : hist.get(hist.size() - 1).getNiveau().name();
+
+        String dernierReleve = hist.isEmpty()
+                ? "—"
+                : hist.get(hist.size() - 1).getValeurAsString();
+
+        String niveau = hist.isEmpty()
+                ? "—"
+                : hist.get(hist.size() - 1).getNiveau().name();
+
         String statut = switch (c.getStatut()) {
             case ACTIVE   -> "Actif";
             case SUSPENDU -> "Suspendu";
             case INACTIVE -> "Défaillant";
         };
+
         return List.of(
                 c.getId(),
                 c.getTypeNom(),
@@ -784,9 +845,57 @@ class CapteurState {
                 niveau
         );
     }
+
+    // =========================
+    // SUSPENDRE
+    // =========================
+    public static void suspendAllFromZone(Zone z) {
+
+        String zoneName = z.getNom(); //  clé commune avec capteur
+
+        for (Capteur c : capteurs) {
+
+            if (c.getZoneId().equalsIgnoreCase(zoneName)) {
+                c.setStatut(StatutCapteur.SUSPENDU);
+            }
+        }
+
+        updateStats();
+        refreshCapteurs();
+    }
+
+    // =========================
+    // ACTIVER
+    // =========================
+    public static void activateAllFromZone(Zone z) {
+
+        String zoneName = z.getNom();
+
+        for (Capteur c : capteurs) {
+
+            if (c.getZoneId().equalsIgnoreCase(zoneName)) {
+                c.setStatut(StatutCapteur.ACTIVE);
+            }
+        }
+
+        updateStats();
+        refreshCapteurs();
+    }
 }
 
 class AlerteState {
+
+    public static void restore(List<Alerte> data) {
+
+        alertes.clear();
+        alertes.addAll(data);
+
+        updateStats();
+        refreshAlertes();
+    }
+
+    private static final List<Alerte> alertes = new ArrayList<>();
+
 
     private static final IntegerProperty nbrAlertes        = new SimpleIntegerProperty(0);
     private static final IntegerProperty nbrCritiques      = new SimpleIntegerProperty(0);
@@ -848,5 +957,82 @@ class AlerteState {
                 a.getReleve().getValeurAsString(),
                 a.isAcquittee() ? "Acquittée" : "Active"
         );
+    }
+}
+
+
+
+
+class SmartFarmPersistence {
+
+    private static final String FILE = "smartfarm.dat";
+
+    // =========================
+    // SAVE
+    // =========================
+    public static void save() {
+        try (ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream(FILE))) {
+
+            out.writeObject(ZoneState.getZones());
+            out.writeObject(CapteurState.getCapteurs());
+            out.writeObject(FarmState.getCultures());
+            out.writeObject(AnimalState.getAnimals());
+            out.writeObject(AlerteState.getAlertesActives());
+
+            System.out.println("✔ SAVE OK");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =========================
+    // LOAD
+    // =========================
+    public static void load() {
+        File f = new File(FILE);
+        if (!f.exists()) {
+            System.out.println("⚠ Aucun fichier de sauvegarde");
+            return;
+        }
+
+        try (ObjectInputStream in = new ObjectInputStream(
+                new FileInputStream(f))) {
+
+            List<Zone> zones = (List<Zone>) in.readObject();
+            List<Capteur> capteurs = (List<Capteur>) in.readObject();
+            List<Culture> cultures = (List<Culture>) in.readObject();
+            List<Animal> animals = (List<Animal>) in.readObject();
+            List<Alerte> alertes = (List<Alerte>) in.readObject();
+
+            // =========================
+            // RESTORE ORDER IMPORTANT
+            // =========================
+            ZoneState.restore(zones);
+            CapteurState.restore(capteurs);
+            FarmState.restore(cultures);
+            AnimalState.restore(animals);
+            AlerteState.restore(alertes);
+
+            System.out.println("✔ LOAD OK");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =========================
+    // START APP
+    // =========================
+    public static void init() {
+        load();
+    }
+
+    // =========================
+    // STOP APP
+    // =========================
+    public static void shutdown() {
+        save();
     }
 }

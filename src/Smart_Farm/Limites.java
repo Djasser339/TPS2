@@ -1,7 +1,9 @@
 package Smart_Farm;
 
+import java.io.Serializable;
+
 // ==================== SEUIL ====================
-class Seuil {
+class Seuil implements Serializable {
     private double min, max;
     public Seuil(double min, double max) {
         if (min >= max) throw new IllegalArgumentException("min doit être < max");
@@ -21,7 +23,7 @@ class Seuil {
 
 // ==================== LIMITES GEOGRAPHIQUES ====================
 
-class GeographicalLimits {
+class GeographicalLimits implements Serializable {
     private String description;
     private double latMin;
     private double latMax;

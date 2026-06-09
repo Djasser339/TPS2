@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.io.*;
 
 // ==================== CAPTEUR (ABSTRACT) ====================
-abstract class Capteur implements Suspendable {
+abstract class Capteur implements Suspendable,Serializable {
+
     protected final String id;
     protected String zoneId;
     protected StatutCapteur statut;
@@ -17,6 +19,8 @@ abstract class Capteur implements Suspendable {
         this.id = id; this.zoneId = zoneId;
         this.statut = StatutCapteur.ACTIVE; this.historiqueReleves = new ArrayList<>();
     }
+
+    public void setStatut(StatutCapteur statut) {this.statut=statut;}
     public abstract void envoyerReleve();
     public void changerStatut(StatutCapteur s) { this.statut = s; }
     public void suspendre()   { this.statut = StatutCapteur.SUSPENDU; }
@@ -38,7 +42,7 @@ abstract class Capteur implements Suspendable {
 }
 
 // ==================== CAPTEUR NUMERIQUE ====================
-abstract class CapteurNumerique extends Capteur {
+abstract class CapteurNumerique extends Capteur implements Serializable  {
     protected TypeMesure typeMesure;
     protected Seuil seuil;
     protected String unite;
@@ -59,7 +63,7 @@ abstract class CapteurNumerique extends Capteur {
 }
 
 // ==================== CAPTEURS CONCRETS ====================
-class CapteurEnvironnemental extends CapteurNumerique {
+class CapteurEnvironnemental extends CapteurNumerique implements Serializable  {
     public CapteurEnvironnemental(String id, String zoneId, TypeMesure type, Seuil seuil) {
         super(id, zoneId, type, seuil,
                 type == TypeMesure.TEMPERATURE ? "°C" : type == TypeMesure.HUMIDITE ? "%" : "mm");
@@ -79,7 +83,7 @@ class CapteurEnvironnemental extends CapteurNumerique {
     @Override public String getTypeNom() { return "Environnemental"; }
 }
 
-class CapteurSol extends CapteurNumerique {
+class CapteurSol extends CapteurNumerique implements Serializable {
     public CapteurSol(String id, String zoneId, TypeMesure type, Seuil seuil) {
         super(id, zoneId, type, seuil,
                 type == TypeMesure.PH_SOL ? "pH" : type == TypeMesure.HUMIDITE_SOL ? "%" : "mg/kg");
@@ -99,7 +103,7 @@ class CapteurSol extends CapteurNumerique {
     @Override public String getTypeNom() { return "Sol"; }
 }
 
-class CapteurEau extends CapteurNumerique {
+class CapteurEau extends CapteurNumerique implements Serializable  {
     public CapteurEau(String id, String zoneId, TypeMesure type, Seuil seuil) {
         super(id, zoneId, type, seuil,
                 type == TypeMesure.TEMPERATURE_EAU ? "°C" : type == TypeMesure.OXYGENE_DISSOUS ? "mg/L" : "pH");
@@ -119,7 +123,7 @@ class CapteurEau extends CapteurNumerique {
     @Override public String getTypeNom() { return "Eau"; }
 }
 
-class CapteurBiometrique extends Capteur {
+class CapteurBiometrique extends Capteur implements Serializable  {
     private Seuil seuilTemperature, seuilActivite;
     public CapteurBiometrique(String id, String zoneId, Seuil seuilTemp, Seuil seuilAct) {
         super(id, zoneId); this.seuilTemperature = seuilTemp; this.seuilActivite = seuilAct;
@@ -144,7 +148,7 @@ class CapteurBiometrique extends Capteur {
     public Seuil getSeuilActivite()         { return seuilActivite; }
 }
 
-class CapteurGPS extends Capteur {
+class CapteurGPS extends Capteur implements Serializable {
     private double latitude, longitude;
     private List<double[]> historiquePositions = new ArrayList<>();
     public CapteurGPS(String id, String zoneId) { super(id, zoneId); }
