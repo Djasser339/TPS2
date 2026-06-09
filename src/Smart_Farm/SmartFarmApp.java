@@ -101,9 +101,9 @@ public class SmartFarmApp extends Application {
 
         // =========================
         // SAMPLE DATA (demo)
-        // set SampleData.ENABLED = false to use only real data
+         //set SampleData.ENABLED = false to use only real data
         // =========================
-        //SampleData.load();
+        SampleData.load();
 
         // =========================
         // SCENE

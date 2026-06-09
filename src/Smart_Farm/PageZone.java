@@ -938,7 +938,7 @@ public class PageZone {
 
         Group zoomGroup = new Group(mapPane);
 
-        StackPane viewport = new StackPane(zoomGroup);
+        Pane viewport = new Pane(zoomGroup);
         viewport.setStyle("-fx-background-color: #d4e8d4;");
 
         // Zoom vers le curseur au scroll
@@ -946,8 +946,8 @@ public class PageZone {
             double oldScale = zoomGroup.getScaleX();
             double factor   = e.getDeltaY() > 0 ? 1.12 : 1.0 / 1.12;
             double newScale = Math.max(0.1, Math.min(6.0, oldScale * factor));
-            double mx = e.getX() - viewport.getWidth()  / 2.0;
-            double my = e.getY() - viewport.getHeight() / 2.0;
+            double mx = e.getX() - MAP_W / 2.0;
+            double my = e.getY() - MAP_H / 2.0;
             zoomGroup.setScaleX(newScale);
             zoomGroup.setScaleY(newScale);
             zoomGroup.setTranslateX(mx - (mx - zoomGroup.getTranslateX()) * newScale / oldScale);
@@ -1010,8 +1010,8 @@ public class PageZone {
                 double scale = Math.min(vpW / MAP_W, vpH / MAP_H) * 0.92;
                 zoomGroup.setScaleX(scale);
                 zoomGroup.setScaleY(scale);
-                zoomGroup.setTranslateX(0);
-                zoomGroup.setTranslateY(0);
+                zoomGroup.setTranslateX((vpW - MAP_W) / 2.0);
+                zoomGroup.setTranslateY((vpH - MAP_H) / 2.0);
             }
         }));
 
