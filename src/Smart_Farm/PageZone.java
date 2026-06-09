@@ -983,15 +983,20 @@ public class PageZone {
         stage.setMaximized(true);
 
         // Ajuster l'échelle initiale pour que la carte remplisse la fenêtre
-        stage.setOnShown(e -> {
+        // Platform.runLater ensures the StackPane layout pass has completed so
+        // layoutX/Y are set correctly before scale is applied — otherwise the
+        // pivot would be off-center and the map appears shifted to the right.
+        stage.setOnShown(e -> Platform.runLater(() -> {
             double vpW = viewport.getWidth();
             double vpH = viewport.getHeight();
             if (vpW > 0 && vpH > 0) {
                 double scale = Math.min(vpW / MAP_W, vpH / MAP_H) * 0.92;
                 zoomGroup.setScaleX(scale);
                 zoomGroup.setScaleY(scale);
+                zoomGroup.setTranslateX(0);
+                zoomGroup.setTranslateY(0);
             }
-        });
+        }));
 
         stage.show();
     }
