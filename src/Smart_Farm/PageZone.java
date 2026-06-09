@@ -1,4 +1,4 @@
-﻿package Smart_Farm;
+package Smart_Farm;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
@@ -691,18 +691,28 @@ public class PageZone {
 
         RadioButton activeBtn = new RadioButton("Active");
         RadioButton inactiveBtn = new RadioButton("Inactive");
+        RadioButton suspendedBtn = new RadioButton("Suspendu");
 
         ToggleGroup group = new ToggleGroup();
+
         activeBtn.setToggleGroup(group);
         inactiveBtn.setToggleGroup(group);
+        suspendedBtn.setToggleGroup(group);
 
+// =========================
+// INIT VALUE
+// =========================
         if (z.getStatut() == StatutZone.ACTIVE) {
             activeBtn.setSelected(true);
-        } else {
+        }
+        else if (z.getStatut() == StatutZone.INACTIVE) {
             inactiveBtn.setSelected(true);
         }
+        else {
+            suspendedBtn.setSelected(true);
+        }
 
-        VBox statusBox = new VBox(10, activeBtn, inactiveBtn);
+        VBox statusBox = new VBox(10, activeBtn, inactiveBtn, suspendedBtn);
 
         // =========================
         // BUTTON
@@ -717,9 +727,16 @@ public class PageZone {
                     // update status
                     if (activeBtn.isSelected()) {
                         z.setStatut(StatutZone.ACTIVE);
-                    } else {
+                    }
+                    else if (inactiveBtn.isSelected()) {
                         z.setStatut(StatutZone.INACTIVE);
                     }
+                    else {
+                        ZoneState.setZoneStatut(z,
+                                activeBtn.isSelected()
+                                        ? StatutZone.ACTIVE
+                                        : StatutZone.SUSPENDU
+                        );                    }
 
                     ZoneState.notifyRefresh();
 

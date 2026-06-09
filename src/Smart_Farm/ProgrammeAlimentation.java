@@ -2,7 +2,9 @@ package Smart_Farm;
 
 // ==================== PROGRAMME ALIMENTATION ====================
 
-class ProgAlimentation {
+import java.io.Serializable;
+
+class ProgAlimentation implements Serializable {
     private String typeAliment;
     private double quantite;
     private String description;

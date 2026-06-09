@@ -2,10 +2,11 @@ package Smart_Farm;
 // ==================== RELEVE ====================
 
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 // ==================== RELEVES ====================
-abstract class Releve {
+abstract class Releve implements Serializable {
     private static long compteur = 0;
     private final long id;
     private final String idCapteur;
@@ -23,7 +24,7 @@ abstract class Releve {
     public abstract String getValeurAsString();
 }
 
-class ReleveNumerique extends Releve {
+class ReleveNumerique extends Releve implements Serializable {
     private final double valeur;
     private final String unite;
     private final TypeMesure typeMesure;
@@ -36,7 +37,7 @@ class ReleveNumerique extends Releve {
     public String getValeurAsString() { return String.format("%.4f %s", valeur, unite); }
 }
 
-class ReleveGPS extends Releve {
+class ReleveGPS extends Releve implements Serializable {
     private final double latitude, longitude;
     public ReleveGPS(String idCapteur, double latitude, double longitude) {
         super(idCapteur); this.latitude = latitude; this.longitude = longitude;

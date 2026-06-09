@@ -1,4 +1,4 @@
-﻿package Smart_Farm;
+package Smart_Farm;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
