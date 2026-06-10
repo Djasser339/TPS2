@@ -1143,6 +1143,22 @@ class SmartFarmPersistence {
     }
 
     // =========================
+    // RESET TO SAMPLE DATA
+    // =========================
+    public static void resetToSampleData() {
+        GestionnaireCapteursAlertes.getInstance().reinitialiser();
+        ZoneState.restore(new ArrayList<>());
+        CapteurState.restore(new ArrayList<>());
+        FarmState.restore(new ArrayList<>());
+        AnimalState.restore(new ArrayList<>());
+        AlerteState.restore(new ArrayList<>());
+        CommercialState.restore(new ArrayList<>(), new ArrayList<>());
+        Alerte.resetCompteur(0);
+        SampleData.load();
+        save();
+    }
+
+    // =========================
     // START APP
     // =========================
     public static void init() {

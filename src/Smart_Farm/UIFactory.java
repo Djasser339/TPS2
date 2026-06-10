@@ -55,11 +55,64 @@ class UIFactory {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        // RESET BUTTON
+        Button resetBtn = new Button("🔄 Données d'essai");
+        resetBtn.setStyle(
+                "-fx-background-color: #fff8e1;" +
+                "-fx-text-fill: #e65100;" +
+                "-fx-border-color: #ffcc80;" +
+                "-fx-border-width: 1;" +
+                "-fx-border-radius: 8;" +
+                "-fx-background-radius: 8;" +
+                "-fx-font-size: 12px;" +
+                "-fx-padding: 5 12;" +
+                "-fx-cursor: hand;"
+        );
+        resetBtn.setOnMouseEntered(e -> resetBtn.setStyle(
+                "-fx-background-color: #ffe0b2;" +
+                "-fx-text-fill: #bf360c;" +
+                "-fx-border-color: #ffb74d;" +
+                "-fx-border-width: 1;" +
+                "-fx-border-radius: 8;" +
+                "-fx-background-radius: 8;" +
+                "-fx-font-size: 12px;" +
+                "-fx-padding: 5 12;" +
+                "-fx-cursor: hand;"
+        ));
+        resetBtn.setOnMouseExited(e -> resetBtn.setStyle(
+                "-fx-background-color: #fff8e1;" +
+                "-fx-text-fill: #e65100;" +
+                "-fx-border-color: #ffcc80;" +
+                "-fx-border-width: 1;" +
+                "-fx-border-radius: 8;" +
+                "-fx-background-radius: 8;" +
+                "-fx-font-size: 12px;" +
+                "-fx-padding: 5 12;" +
+                "-fx-cursor: hand;"
+        ));
+        resetBtn.setOnAction(e -> {
+            javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.CONFIRMATION
+            );
+            confirm.setTitle("Réinitialiser les données");
+            confirm.setHeaderText("Revenir aux données d'essai ?");
+            confirm.setContentText(
+                    "Toutes vos données actuelles seront effacées\n" +
+                    "et remplacées par les données de démonstration initiales."
+            );
+            confirm.showAndWait().ifPresent(response -> {
+                if (response == javafx.scene.control.ButtonType.OK) {
+                    SmartFarmPersistence.resetToSampleData();
+                }
+            });
+        });
+
         topBar.getChildren().addAll(
                 pageLabel,
                 spacer,
                 dateLabel,
                 farmLabel,
+                resetBtn,
                 bellNode
         );
 

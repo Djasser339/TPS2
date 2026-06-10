@@ -75,6 +75,13 @@ class GestionnaireCapteursAlertes {
         alertes.clear();
         alertes.addAll(data);
     }
+
+    public void reinitialiser() {
+        tousLesCapteurs.clear();
+        capteursParZone.clear();
+        capteursParId.clear();
+        alertes.clear();
+    }
     public List<Capteur> getCapteursParZone(String zoneId) {
         return capteursParZone.getOrDefault(zoneId, Collections.emptyList());
     }
