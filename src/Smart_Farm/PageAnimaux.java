@@ -85,6 +85,9 @@ public class PageAnimaux {
         center.getChildren().add(UIFactory.createAnimatedTitle("🐾 Distribution des Animaux par Type"));
         center.getChildren().add(createAnimalDistributionChart());
 
+        center.getChildren().add(UIFactory.createAnimatedTitle("\uD83C\uDF3E programmes d'alimentation par zone."));
+
+
         center.getChildren().add(
                 createAlimentationSearchCard(ZoneState.getZones())
         );

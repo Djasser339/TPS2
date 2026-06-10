@@ -115,6 +115,7 @@ public class PageZone {
                 "Type Zone",
                 "Date",
                 "Description",
+                "Valeur",
                 "Unité"
         );
 

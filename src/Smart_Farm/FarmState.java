@@ -286,13 +286,38 @@ class ZoneState {
     public static void restore(List<Zone> data) {
 
         zones.clear();
+
+        // IMPORTANT
+        timelines.values().forEach(Timeline::stop);
+        timelines.clear();
+
         zones.addAll(data);
 
         // recalcul des stats
         nbrZones.set(zones.size());
-        nbrZoneCulture.set((int) zones.stream().filter(z -> z instanceof ZoneCulture).count());
-        nbrZoneElevage.set((int) zones.stream().filter(z -> z instanceof ZoneElevage).count());
-        nbrZoneAquacole.set((int) zones.stream().filter(z -> z instanceof ZoneAquacole).count());
+
+        nbrZoneCulture.set(
+                (int) zones.stream()
+                        .filter(z -> z instanceof ZoneCulture)
+                        .count()
+        );
+
+        nbrZoneElevage.set(
+                (int) zones.stream()
+                        .filter(z -> z instanceof ZoneElevage)
+                        .count()
+        );
+
+        nbrZoneAquacole.set(
+                (int) zones.stream()
+                        .filter(z -> z instanceof ZoneAquacole)
+                        .count()
+        );
+
+        // REDÉMARRER LES PRODUCTIONS
+        for (Zone z : zones) {
+            startProductionSimulation(z);
+        }
 
         // refresh UI
         notifyRefresh();
@@ -563,6 +588,15 @@ class ZoneState {
                         typeProduction = "kg aquacole";
                     }
 
+                    System.out.println(
+                            "PRODUCTION -> "
+                                    + zone.getNom()
+                                    + " | "
+                                    + rendement
+                                    + " "
+                                    + typeProduction
+                    );
+
                     zone.enregistrerProduction(rendement, typeProduction);
 
                     refreshProduction();
@@ -645,16 +679,35 @@ class ZoneState {
         String description = "";
 
         if (type != null) {
-            String[] split = type.split(" ", 2);
-            unite = split[0];
-            if (split.length > 1) description = split[1];
+
+            if (type.contains("kg cultures")) {
+                unite = "kg";
+                description = "cultures";
+            }
+            else if (type.contains("litres lait")) {
+                unite = "litres";
+                description = "lait";
+            }
+            else if (type.contains("unité oeufs")) {
+                unite = "unité";
+                description = "oeufs";
+            }
+            else if (type.contains("kg aquacole")) {
+                unite = "kg";
+                description = "aquacole";
+            }
         }
 
         return List.of(
                 z.getNom(),
                 z.getType().toString(),
-                String.valueOf(p.getDate()),
+                p.getDate().toString(),
                 description,
+
+                // ===== VALEUR =====
+                String.valueOf(p.getQuantite()),
+
+                // ===== UNITÉ =====
                 unite
         );
     }
