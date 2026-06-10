@@ -325,6 +325,10 @@ class ZoneState {
     private static final IntegerProperty zoneEntityRevision =
             new SimpleIntegerProperty(0);
 
+    // Incrémenté à chaque tick de production (toutes les 60 s par zone)
+    private static final IntegerProperty productionRevision =
+            new SimpleIntegerProperty(0);
+
     // =========================
     // REFRESH HOOK
     // =========================
@@ -368,10 +372,13 @@ class ZoneState {
     }
 
     public static void refreshProduction() {
+        productionRevision.set(productionRevision.get() + 1);
         if (productionRefresh != null) {
             Platform.runLater(productionRefresh);
         }
     }
+
+    public static IntegerProperty productionRevisionProperty() { return productionRevision; }
 
     // =========================
     // PROPERTIES

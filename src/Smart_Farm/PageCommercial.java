@@ -75,6 +75,7 @@ public class PageCommercial {
         CommercialState.setDashRefresh(refreshStock);
         // also refresh stock when production updates
         ZoneState.nbrZonesProperty().addListener((o, v, n) -> Platform.runLater(refreshStock));
+        ZoneState.productionRevisionProperty().addListener((o, v, n) -> Platform.runLater(refreshStock));
         content.getChildren().add(stockSection);
 
         // ── Charts row ──
