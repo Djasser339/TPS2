@@ -3,13 +3,15 @@ package Smart_Farm;
 
 // ==================== ALERTE ====================
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.*;
 import java.time.format.DateTimeFormatter;
 // ==================== ALERTE ====================
-class Alerte {
+class Alerte implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static long compteur = 0;
     private final long id;
     private final Releve releve;
@@ -28,6 +30,7 @@ class Alerte {
     public LocalDateTime getDateCreation() { return dateCreation; }
     public boolean isAcquittee()         { return acquittee; }
     public boolean isSupprimee()         { return supprimee; }
+    static void resetCompteur(long max)  { compteur = max; }
 }
 
 // ==================== GESTIONNAIRE GLOBAL ====================
@@ -66,6 +69,11 @@ class GestionnaireCapteursAlertes {
 
     public void declencherAlerte(Releve releve, Gravite niveau) {
         if (niveau != Gravite.normal) alertes.add(new Alerte(releve, niveau));
+    }
+
+    public void restaurerAlertes(List<Alerte> data) {
+        alertes.clear();
+        alertes.addAll(data);
     }
     public List<Capteur> getCapteursParZone(String zoneId) {
         return capteursParZone.getOrDefault(zoneId, Collections.emptyList());
@@ -189,7 +197,8 @@ class GestionnaireCapteursAlertes {
 
 // ==================== EVENEMENT SANTE ====================
 
-class EvenementSante {
+class EvenementSante implements Serializable {
+    private static final long serialVersionUID = 1L;
     private TypeEvenSante type;
     private LocalDate date;
     private String description;

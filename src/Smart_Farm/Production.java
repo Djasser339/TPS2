@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 class HistoriqueProd implements Serializable {
+    private static final long serialVersionUID = 1L;
     private LocalDate date;
     private double quantite;
     private String unite;

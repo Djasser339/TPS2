@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 abstract class Culture implements Serializable {
+    private static final long serialVersionUID = 1L;
     private FamilleCulture famille;
     private LocalDate datePlantation;
     private LocalDate dateRecolte;
@@ -86,7 +87,8 @@ abstract class Culture implements Serializable {
     }
 }
 
-class Cereal extends Culture implements Serializable  {
+class Cereal extends Culture {
+    private static final long serialVersionUID = 1L;
     private List<String> cultures = new ArrayList<>();
     static int Nbr;
 
@@ -106,7 +108,8 @@ class Cereal extends Culture implements Serializable  {
     public void removeCultures(String culture) { cultures.remove(culture); }
 }
 
-class Legume extends Culture implements Serializable {
+class Legume extends Culture {
+    private static final long serialVersionUID = 1L;
     private List<String> cultures = new ArrayList<>();
     static int Nbr;
 
@@ -126,7 +129,8 @@ class Legume extends Culture implements Serializable {
     public void removeCultures(String culture) { cultures.remove(culture); }
 }
 
-class Fruit extends Culture implements Serializable {
+class Fruit extends Culture {
+    private static final long serialVersionUID = 1L;
     private List<String> cultures = new ArrayList<>();
     static int Nbr;
 

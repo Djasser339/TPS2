@@ -5,6 +5,7 @@ package Smart_Farm;
 import java.io.Serializable;
 
 class ProgAlimentation implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String typeAliment;
     private double quantite;
     private String description;

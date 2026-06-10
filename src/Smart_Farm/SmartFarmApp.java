@@ -23,7 +23,8 @@ public class SmartFarmApp extends Application {
     @Override
     public void start(Stage stage) {
 
-        SmartFarmPersistence.load();
+        boolean needsSampleData = !SmartFarmPersistence.hasSaveFile()
+                                  || !SmartFarmPersistence.load();
 
 
 
@@ -103,7 +104,7 @@ public class SmartFarmApp extends Application {
         // SAMPLE DATA (demo)
          //set SampleData.ENABLED = false to use only real data
         // =========================
-        SampleData.load();
+        if (needsSampleData) SampleData.load();
 
         // =========================
         // SCENE
@@ -140,6 +141,11 @@ public class SmartFarmApp extends Application {
         stage.setOnCloseRequest(e -> {
             SmartFarmPersistence.save();
         });
+    }
+
+    @Override
+    public void stop() {
+        SmartFarmPersistence.save();
     }
 
     // =========================================

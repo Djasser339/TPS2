@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 // ==================== SEUIL ====================
 class Seuil implements Serializable {
+    private static final long serialVersionUID = 1L;
     private double min, max;
     public Seuil(double min, double max) {
         if (min >= max) throw new IllegalArgumentException("min doit être < max");
@@ -24,6 +25,7 @@ class Seuil implements Serializable {
 // ==================== LIMITES GEOGRAPHIQUES ====================
 
 class GeographicalLimits implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String description;
     private double latMin;
     private double latMax;

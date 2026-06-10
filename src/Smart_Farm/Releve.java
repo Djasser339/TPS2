@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 // ==================== RELEVES ====================
 abstract class Releve implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static long compteur = 0;
     private final long id;
     private final String idCapteur;
@@ -24,7 +25,8 @@ abstract class Releve implements Serializable {
     public abstract String getValeurAsString();
 }
 
-class ReleveNumerique extends Releve implements Serializable {
+class ReleveNumerique extends Releve {
+    private static final long serialVersionUID = 1L;
     private final double valeur;
     private final String unite;
     private final TypeMesure typeMesure;
@@ -37,7 +39,8 @@ class ReleveNumerique extends Releve implements Serializable {
     public String getValeurAsString() { return String.format("%.4f %s", valeur, unite); }
 }
 
-class ReleveGPS extends Releve implements Serializable {
+class ReleveGPS extends Releve {
+    private static final long serialVersionUID = 1L;
     private final double latitude, longitude;
     public ReleveGPS(String idCapteur, double latitude, double longitude) {
         super(idCapteur); this.latitude = latitude; this.longitude = longitude;

@@ -10,7 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-abstract class Zone implements Suspendable , Serializable {
+abstract class Zone implements Suspendable, Serializable {
+    private static final long serialVersionUID = 1L;
     protected int code;
     protected String nom;
     protected TypeZone type;
@@ -101,7 +102,8 @@ abstract class Zone implements Suspendable , Serializable {
 
 // ==================== ZONES ====================
 
-class ZoneCulture extends Zone implements Serializable  {
+class ZoneCulture extends Zone {
+    private static final long serialVersionUID = 1L;
     private List<Culture> cultures = new ArrayList<>();
     private List<CapteurSol> capteurSols = new ArrayList<>();
     private List<CapteurEnvironnemental> capteurEnvironnementals = new ArrayList<>();
@@ -149,7 +151,8 @@ class ZoneCulture extends Zone implements Serializable  {
     public int getNbrEntite() { return cultures.size(); }
 }
 
-class ZoneElevage extends Zone implements Serializable  {
+class ZoneElevage extends Zone {
+    private static final long serialVersionUID = 1L;
     private List<Animal> animals = new ArrayList<>();
     private GeographicalLimits limitZone;
     private List<ProgAlimentation> programme = new ArrayList<>();
@@ -192,7 +195,8 @@ class ZoneElevage extends Zone implements Serializable  {
     }
 }
 
-class ZoneAquacole extends Zone implements Serializable  {
+class ZoneAquacole extends Zone {
+    private static final long serialVersionUID = 1L;
     private List<Aquacole> aquacoles = new ArrayList<>();
     private List<ProgAlimentation> programme = new ArrayList<>();
     private List<CapteurEau> capteurEau = new ArrayList<>();

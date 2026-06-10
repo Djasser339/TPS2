@@ -2,11 +2,13 @@ package Smart_Farm;
 
 // ==================== ANIMAL (ABSTRACT) ====================
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-abstract class Animal {
+abstract class Animal implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static int id;
     private String nom;
     private int temperature;
@@ -61,6 +63,7 @@ abstract class Animal {
 }
 
 class Ruminant extends Animal implements Entite {
+    private static final long serialVersionUID = 1L;
     private List<HistoriqueProd> historique = new ArrayList<>();
 
     public Ruminant( TypeEspece espece, String nom) {
@@ -77,6 +80,7 @@ class Ruminant extends Animal implements Entite {
 }
 
 class Volaille extends Animal implements Entite {
+    private static final long serialVersionUID = 1L;
     private List<HistoriqueProd> historique = new ArrayList<>();
 
     public Volaille( TypeEspece espece, String nom) {
@@ -93,6 +97,7 @@ class Volaille extends Animal implements Entite {
 }
 
 class Aquacole extends Animal {
+    private static final long serialVersionUID = 1L;
     private List<HistoriqueProd> historique = new ArrayList<>();
 
     public Aquacole(TypeEspece espece, String nom) {

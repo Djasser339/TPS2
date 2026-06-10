@@ -7,17 +7,24 @@ import java.util.Random;
 import java.io.*;
 
 // ==================== CAPTEUR (ABSTRACT) ====================
-abstract class Capteur implements Suspendable,Serializable {
+abstract class Capteur implements Suspendable, Serializable {
+    private static final long serialVersionUID = 1L;
 
     protected final String id;
     protected String zoneId;
     protected StatutCapteur statut;
     protected List<Releve> historiqueReleves;
-    protected GestionnaireCapteursAlertes gestionnaire = GestionnaireCapteursAlertes.getInstance();
+    protected transient GestionnaireCapteursAlertes gestionnaire;
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        this.gestionnaire = GestionnaireCapteursAlertes.getInstance();
+    }
 
     public Capteur(String id, String zoneId) {
         this.id = id; this.zoneId = zoneId;
         this.statut = StatutCapteur.ACTIVE; this.historiqueReleves = new ArrayList<>();
+        this.gestionnaire = GestionnaireCapteursAlertes.getInstance();
     }
 
     public void setStatut(StatutCapteur statut) {this.statut=statut;}
@@ -42,7 +49,8 @@ abstract class Capteur implements Suspendable,Serializable {
 }
 
 // ==================== CAPTEUR NUMERIQUE ====================
-abstract class CapteurNumerique extends Capteur implements Serializable  {
+abstract class CapteurNumerique extends Capteur {
+    private static final long serialVersionUID = 1L;
     protected TypeMesure typeMesure;
     protected Seuil seuil;
     protected String unite;
@@ -63,7 +71,8 @@ abstract class CapteurNumerique extends Capteur implements Serializable  {
 }
 
 // ==================== CAPTEURS CONCRETS ====================
-class CapteurEnvironnemental extends CapteurNumerique implements Serializable  {
+class CapteurEnvironnemental extends CapteurNumerique {
+    private static final long serialVersionUID = 1L;
     public CapteurEnvironnemental(String id, String zoneId, TypeMesure type, Seuil seuil) {
         super(id, zoneId, type, seuil,
                 type == TypeMesure.TEMPERATURE ? "°C" : type == TypeMesure.HUMIDITE ? "%" : "mm");
@@ -83,7 +92,8 @@ class CapteurEnvironnemental extends CapteurNumerique implements Serializable  {
     @Override public String getTypeNom() { return "Environnemental"; }
 }
 
-class CapteurSol extends CapteurNumerique implements Serializable {
+class CapteurSol extends CapteurNumerique {
+    private static final long serialVersionUID = 1L;
     public CapteurSol(String id, String zoneId, TypeMesure type, Seuil seuil) {
         super(id, zoneId, type, seuil,
                 type == TypeMesure.PH_SOL ? "pH" : type == TypeMesure.HUMIDITE_SOL ? "%" : "mg/kg");
@@ -103,7 +113,8 @@ class CapteurSol extends CapteurNumerique implements Serializable {
     @Override public String getTypeNom() { return "Sol"; }
 }
 
-class CapteurEau extends CapteurNumerique implements Serializable  {
+class CapteurEau extends CapteurNumerique {
+    private static final long serialVersionUID = 1L;
     public CapteurEau(String id, String zoneId, TypeMesure type, Seuil seuil) {
         super(id, zoneId, type, seuil,
                 type == TypeMesure.TEMPERATURE_EAU ? "°C" : type == TypeMesure.OXYGENE_DISSOUS ? "mg/L" : "pH");
@@ -123,7 +134,8 @@ class CapteurEau extends CapteurNumerique implements Serializable  {
     @Override public String getTypeNom() { return "Eau"; }
 }
 
-class CapteurBiometrique extends Capteur implements Serializable  {
+class CapteurBiometrique extends Capteur {
+    private static final long serialVersionUID = 1L;
     private Seuil seuilTemperature, seuilActivite;
     public CapteurBiometrique(String id, String zoneId, Seuil seuilTemp, Seuil seuilAct) {
         super(id, zoneId); this.seuilTemperature = seuilTemp; this.seuilActivite = seuilAct;
@@ -148,7 +160,8 @@ class CapteurBiometrique extends Capteur implements Serializable  {
     public Seuil getSeuilActivite()         { return seuilActivite; }
 }
 
-class CapteurGPS extends Capteur implements Serializable {
+class CapteurGPS extends Capteur {
+    private static final long serialVersionUID = 1L;
     private double latitude, longitude;
     private List<double[]> historiquePositions = new ArrayList<>();
     public CapteurGPS(String id, String zoneId) { super(id, zoneId); }

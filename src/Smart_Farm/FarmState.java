@@ -949,6 +949,8 @@ class AlerteState {
         alertes.clear();
         alertes.addAll(data);
 
+        GestionnaireCapteursAlertes.getInstance().restaurerAlertes(data);
+
         updateStats();
         refreshAlertes();
     }
@@ -1026,70 +1028,117 @@ class SmartFarmPersistence {
 
     private static final String FILE = "smartfarm.dat";
 
+    public static boolean hasSaveFile() {
+        return new File(FILE).exists();
+    }
+
     // =========================
     // SAVE
     // =========================
     public static void save() {
+        System.out.println("[SAVE] Déclenchement sauvegarde...");
+        System.out.println("[SAVE] Zones    : " + ZoneState.getZones().size());
+        System.out.println("[SAVE] Animaux  : " + AnimalState.getAnimals().size());
+        System.out.println("[SAVE] Capteurs : " + CapteurState.getCapteurs().size());
+        System.out.println("[SAVE] Cultures : " + FarmState.getCultures().size());
+        System.out.println("[SAVE] Alertes  : " + AlerteState.getAlertesActives().size());
+
+        File target = new File(FILE);
+        File temp   = new File(FILE + ".tmp");
+        System.out.println("[SAVE] Chemin fichier : " + target.getAbsolutePath());
+
         try (ObjectOutputStream out = new ObjectOutputStream(
-                new FileOutputStream(FILE))) {
+                new FileOutputStream(temp))) {
 
             out.writeObject(ZoneState.getZones());
             out.writeObject(CapteurState.getCapteurs());
-            out.writeObject(FarmState.getCultures());
+            out.writeObject(new ArrayList<>(FarmState.getCultures()));
             out.writeObject(AnimalState.getAnimals());
             out.writeObject(AlerteState.getAlertesActives());
-            // Commercial data — written last for backward compatibility
             out.writeObject(CommercialState.getClientsForSave());
             out.writeObject(CommercialState.getVentesForSave());
 
-            System.out.println("✔ SAVE OK");
-
         } catch (Exception e) {
             e.printStackTrace();
+            temp.delete();
+            System.out.println("[SAVE] ✘ ÉCRITURE ÉCHOUÉE");
+            return;
+        }
+
+        try {
+            java.nio.file.Files.move(temp.toPath(), target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("[SAVE] ✔ SAVE OK → " + target.getAbsolutePath());
+        } catch (IOException moveEx) {
+            System.out.println("[SAVE] ✘ Files.move ÉCHOUÉ : " + moveEx.getMessage());
+            temp.delete();
         }
     }
 
     // =========================
     // LOAD
     // =========================
-    public static void load() {
+    public static boolean load() {
         File f = new File(FILE);
+        System.out.println("[LOAD] Chemin fichier : " + f.getAbsolutePath());
+        System.out.println("[LOAD] Fichier existe : " + f.exists() + "  taille=" + f.length() + " octets");
+
         if (!f.exists()) {
-            System.out.println("⚠ Aucun fichier de sauvegarde");
-            return;
+            System.out.println("[LOAD] ⚠ Aucun fichier de sauvegarde");
+            return false;
         }
 
         try (ObjectInputStream in = new ObjectInputStream(
                 new FileInputStream(f))) {
 
-            List<Zone> zones = (List<Zone>) in.readObject();
+            List<Zone>    zones    = (List<Zone>)    in.readObject();
             List<Capteur> capteurs = (List<Capteur>) in.readObject();
             List<Culture> cultures = (List<Culture>) in.readObject();
-            List<Animal> animals = (List<Animal>) in.readObject();
-            List<Alerte> alertes = (List<Alerte>) in.readObject();
+            List<Animal>  animals  = (List<Animal>)  in.readObject();
+            List<Alerte>  alertes  = (List<Alerte>)  in.readObject();
 
-            // =========================
-            // RESTORE ORDER IMPORTANT
-            // =========================
+            System.out.println("[LOAD] Zones lues    : " + zones.size());
+            System.out.println("[LOAD] Capteurs lus  : " + capteurs.size());
+            System.out.println("[LOAD] Cultures lues : " + cultures.size());
+            System.out.println("[LOAD] Animaux lus   : " + animals.size());
+            System.out.println("[LOAD] Alertes lues  : " + alertes.size());
+
             ZoneState.restore(zones);
-            CapteurState.restore(capteurs);
-            FarmState.restore(cultures);
-            AnimalState.restore(animals);
-            AlerteState.restore(alertes);
+            System.out.println("[RESTORE] ZoneState.zones    = " + ZoneState.getZones().size());
 
-            // Commercial data — old save files silently skip this block
+            CapteurState.restore(capteurs);
+            System.out.println("[RESTORE] CapteurState       = " + CapteurState.getCapteurs().size());
+
+            FarmState.restore(cultures);
+            System.out.println("[RESTORE] FarmState.cultures = " + FarmState.getCultures().size());
+
+            AnimalState.restore(animals);
+            System.out.println("[RESTORE] AnimalState.animals= " + AnimalState.getAnimals().size());
+
+            AlerteState.restore(alertes);
+            System.out.println("[RESTORE] AlerteState lues   = " + alertes.size() + "  (actives après restore=" + AlerteState.getAlertesActives().size() + ")");
+
+            long maxAlerteId = 0;
+            for (Alerte a : alertes) { if (a.getId() > maxAlerteId) maxAlerteId = a.getId(); }
+            Alerte.resetCompteur(maxAlerteId);
+
             try {
                 List<Client> clients = (List<Client>) in.readObject();
                 List<Vente>  ventes  = (List<Vente>)  in.readObject();
                 CommercialState.restore(clients, ventes);
+                System.out.println("[RESTORE] Clients=" + clients.size() + "  Ventes=" + ventes.size());
             } catch (Exception ignored) {
-                // Pre-commercial save file — start with empty commercial data
+                System.out.println("[RESTORE] Pas de données commerciales dans ce fichier");
             }
 
-            System.out.println("✔ LOAD OK");
+            System.out.println("[LOAD] ✔ LOAD OK");
+            return true;
 
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("[LOAD] ✘ Fichier corrompu — suppression et réinitialisation");
+            f.delete();
+            return false;
         }
     }
 
