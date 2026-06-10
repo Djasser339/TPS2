@@ -274,16 +274,15 @@ public class PageAnimaux {
 
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setTitle("Action Animal");
+        stage.setTitle(a.getNom() + " — Actions");
 
-        VBox root = new VBox(15);
-        root.setPadding(new Insets(20));
-        root.setAlignment(Pos.CENTER);
+        // ---- Onglet : État de Santé ----
+        VBox santeBox = new VBox(15);
+        santeBox.setPadding(new Insets(20));
+        santeBox.setAlignment(Pos.CENTER);
 
-        root.getStyleClass().add("form-global");
-
-        Label title = new Label("Modifier état de santé");
-        title.getStyleClass().add("form-label");
+        Label titleSante = new Label("Modifier état de santé");
+        titleSante.getStyleClass().add("form-label");
 
         RadioButton sain = new RadioButton("Sain");
         RadioButton malade = new RadioButton("Malade");
@@ -302,11 +301,10 @@ public class PageAnimaux {
             surveillance.setSelected(true);
         }
 
-        Button save = new Button("Valider");
-        save.getStyleClass().add("form-button");
+        Button saveSante = new Button("Valider");
+        saveSante.getStyleClass().add("form-button");
 
-        save.setOnAction(e -> {
-
+        saveSante.setOnAction(e -> {
             if (sain.isSelected()) {
                 a.setEtatSante(EtatSante.sain);
             } else if (malade.isSelected()) {
@@ -314,25 +312,86 @@ public class PageAnimaux {
             } else {
                 a.setEtatSante(EtatSante.quarantaine);
             }
-
             AnimalState.refreshAnimals();
             stage.close();
         });
 
-        root.getChildren().addAll(
-                title,
-                sain,
-                malade,
-                surveillance,
-                save
-        );
+        santeBox.getChildren().addAll(titleSante, sain, malade, surveillance, saveSante);
+        Tab santeTab = new Tab("État de Santé", santeBox);
+        santeTab.setClosable(false);
 
-        Scene scene = new Scene(root, 300, 250);
+        // ---- Onglet : Poids & Évolution ----
+        VBox poidsBox = new VBox(12);
+        poidsBox.setPadding(new Insets(20));
 
-        //  FIX IMPORTANT ICI
-        scene.getStylesheets().add(
-                PageZone.class.getResource("style.css").toExternalForm()
+        Label poidsActuelLabel = new Label("Poids actuel : " + a.getPoid() + " kg");
+        poidsActuelLabel.getStyleClass().add("form-label");
+
+        HBox saisieBox = new HBox(10);
+        saisieBox.setAlignment(Pos.CENTER_LEFT);
+        Label poidsInputLabel = new Label("Nouveau poids (kg) :");
+        TextField poidsField = new TextField();
+        poidsField.setPromptText("ex: 350");
+        poidsField.setPrefWidth(100);
+        saisieBox.getChildren().addAll(poidsInputLabel, poidsField);
+
+        Label errorLabel = new Label();
+        errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 11px;");
+
+        Button savePoidsBtn = new Button("Mettre à jour");
+        savePoidsBtn.getStyleClass().add("form-button");
+
+        Label histLabel = new Label("Historique des pesées :");
+        histLabel.getStyleClass().add("form-label");
+
+        ListView<String> histList = new ListView<>();
+        histList.setPrefHeight(140);
+
+        Runnable refreshHist = () -> {
+            List<String> items = new ArrayList<>();
+            for (EvenementSante ev : a.getEvenementsSante()) {
+                if (ev.getType() == TypeEvenSante.GAIN_POIDS) {
+                    items.add(ev.toString());
+                }
+            }
+            histList.getItems().setAll(items);
+        };
+        refreshHist.run();
+
+        savePoidsBtn.setOnAction(e -> {
+            String txt = poidsField.getText().trim();
+            try {
+                int newPoid = Integer.parseInt(txt);
+                if (newPoid <= 0) {
+                    errorLabel.setText("Le poids doit être un nombre positif.");
+                    return;
+                }
+                a.setPoid(newPoid);
+                a.ajouterEvenementSante(new EvenementSante(TypeEvenSante.GAIN_POIDS, newPoid + " kg"));
+                poidsActuelLabel.setText("Poids actuel : " + newPoid + " kg");
+                poidsField.clear();
+                errorLabel.setText("");
+                refreshHist.run();
+                AnimalState.refreshAnimals();
+            } catch (NumberFormatException ex) {
+                errorLabel.setText("Veuillez entrer un nombre entier valide.");
+            }
+        });
+
+        poidsBox.getChildren().addAll(
+                poidsActuelLabel, saisieBox, errorLabel, savePoidsBtn, histLabel, histList
         );
+        Tab poidsTab = new Tab("Poids & Évolution", poidsBox);
+        poidsTab.setClosable(false);
+
+        // ---- Assemblage ----
+        TabPane tabPane = new TabPane(santeTab, poidsTab);
+
+        VBox root = new VBox(tabPane);
+        root.getStyleClass().add("form-global");
+
+        Scene scene = new Scene(root, 400, 430);
+        scene.getStylesheets().add(PageZone.class.getResource("style.css").toExternalForm());
 
         stage.setScene(scene);
         stage.showAndWait();
