@@ -196,9 +196,9 @@ public class PageAnimaux {
         Label typeLabel = new Label("Type Animal");
         typeLabel.getStyleClass().add("form-label");
 
-        RadioButton ruminantBtn = new RadioButton("🐄 Ruminant");
-        RadioButton volailleBtn = new RadioButton("🐔 Volaille");
-        RadioButton aquacoleBtn = new RadioButton("🐟 Aquacole");
+        RadioButton ruminantBtn = new RadioButton("🐄  ");
+        RadioButton volailleBtn = new RadioButton("🐔  ");
+        RadioButton aquacoleBtn = new RadioButton("🐟 ");
 
         ToggleGroup group = new ToggleGroup();
         ruminantBtn.setToggleGroup(group);
